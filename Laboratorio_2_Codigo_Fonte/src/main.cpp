@@ -249,19 +249,11 @@ int main()
     // Ficamos em loop, renderizando, até que o usuário feche a janela
     float prev_time = (float)glfwGetTime();
     float delta_t = 0.0f;
-    srand (time(NULL));
-    std::vector<glm::vec4> controlPoints;
-    //gera uma curvar aleatoria, com valores xyz dos pontos de controle entre  -1 a 1]
-
-    for(int i = 0 ;i<5; i++){
-        controlPoints.push_back(glm::vec4((float)((rand() % 2000)-1000)/(float)1000 , (float)((rand() % 2000)-1000)/(float)1000, (float)((rand() % 2000)-1000)/(float)1000, 1.0f));
-        std::cout<<controlPoints[i].x;
-        std::cout << " ";
-        std::cout<<controlPoints[i].y;
-        std::cout << " ";
-        std::cout<<controlPoints[i].z;
-        std::cout << "\n";
-    }
+    glm::vec4 carPos=glm::vec4(0.0f, 0.0f, 0.0f, 1.0f);
+    glm::vec4 carForward=glm::vec4(1.0f, 0.0f, 0.0f, 0.0f);
+    glm::mat4 modelCube;
+    modelCube = Matrix_Identity();
+    modelCube = Matrix_Translate(carPos.x,carPos.y,carPos.z);
     while (!glfwWindowShouldClose(window))
     {
         
@@ -303,30 +295,32 @@ int main()
         float current_time = (float)glfwGetTime();
         delta_t = current_time - prev_time;
         prev_time = current_time;
+        camera_view_vector=carForward;
+        c=Matrix_Translate(-carForward.x*3,-carForward.y*3,-carForward.z*3)*carPos;
         if (wPressed)
         {
-            c += -w * speed * delta_t;
+            //c += -w * speed * delta_t;
         }
         if (aPressed)
         {
-            c += u * speed * delta_t;
+            //c += u * speed * delta_t;
         }
 
         if (sPressed)
         {
-            c += w * speed * delta_t;
+            //c += w * speed * delta_t;
         }
         if (dPressed)
         {
-            c += -u * speed * delta_t;
+            //c += -u * speed * delta_t;
         }
         if (shiftPressed)
         {
-            c += -crossproduct(w, u) / norm(crossproduct(w, u)) * speed * delta_t;
+            //c += -crossproduct(w, u) / norm(crossproduct(w, u)) * speed * delta_t;
         }
         if (ctrlPressed)
         {
-            c += crossproduct(w, u) / norm(crossproduct(w, u)) * speed * delta_t;
+            //c += crossproduct(w, u) / norm(crossproduct(w, u)) * speed * delta_t;
         }
 
         // Abaixo definimos as varáveis que efetivamente definem a câmera virtual.
@@ -380,7 +374,6 @@ int main()
         // já que cada cópia estará em uma posição (rotação, escala, ...)
         // diferente em relação ao espaço global (World Coordinates). Veja
         // slides 2-14 e 184-190 do documento Aula_08_Sistemas_de_Coordenadas.pdf.
-        glm::mat4 modelCube;
 
         // A primeira cópia do cubo não sofrerá nenhuma transformação
         // de modelagem. Portanto, sua matriz "model" é a identidade, e
@@ -388,17 +381,49 @@ int main()
         // *exatamente iguais* a suas coordenadas no espaço do modelo
         
         // (Model Coordinates).
-        modelCube = Matrix_Identity();
+         //change to class for car later
+        if (wPressed)
+        {
+            glm::vec4 currentPos=carPos;
+            carPos+=carForward*speed*delta_t;
+            glm::vec4 nextPos=carPos-currentPos;
+            modelCube = Matrix_Translate(nextPos.x, nextPos.y, nextPos.z)*modelCube;
+            //c += -w * speed * delta_t;
+        }
+        if (aPressed)
+        {
+            carForward=Matrix_Rotate_Y(0.01)*carForward;
+            modelCube=Matrix_Translate(carPos.x,carPos.y,carPos.z)*Matrix_Rotate_Y(0.01)*Matrix_Translate(-carPos.x,-carPos.y,-carPos.z)*modelCube;
+            
+            //c += u * speed * delta_t;
+        }
 
+        if (sPressed)
+        {
+            glm::vec4 currentPos=carPos;
+            carPos-=carForward*speed*delta_t;
+            glm::vec4 nextPos=carPos-currentPos;
+            modelCube = Matrix_Translate(nextPos.x, nextPos.y, nextPos.z)*modelCube;
+
+            //c += w * speed * delta_t;
+        }
+        if (dPressed)
+        {
+            carForward=Matrix_Rotate_Y(-0.01)*carForward;
+            modelCube=Matrix_Translate(carPos.x,carPos.y,carPos.z)*Matrix_Rotate_Y(-0.01)*Matrix_Translate(-carPos.x,-carPos.y,-carPos.z)*modelCube;            //c += -u * speed * delta_t;
+        }
+        if (shiftPressed)
+        {
+            //c += -crossproduct(w, u) / norm(crossproduct(w, u)) * speed * delta_t;
+        }
+        if (ctrlPressed)
+        {
+            //c += crossproduct(w, u) / norm(crossproduct(w, u)) * speed * delta_t;
+        }
         // Enviamos a matriz "model" para a placa de vídeo (GPU). Veja o
         // arquivo "shader_vertex.glsl", onde esta é efetivamente
         // aplicada em todos os pontos.
-        float time = (float)glfwGetTime();
-        time=std::abs(sin(time));
-        std::cout<<time<< "\n";
-        glm::vec4 BezierPoint = Bezier(controlPoints, 4, time);
-        glm::vec4 newPosition = BezierPoint;
-        modelCube = modelCube * Matrix_Translate(newPosition.x, newPosition.y, newPosition.z);
+        
         glUniformMatrix4fv(model_uniform, 1, GL_FALSE, glm::value_ptr(modelCube));
 
         // Informamos para a placa de vídeo (GPU) que a variável booleana
