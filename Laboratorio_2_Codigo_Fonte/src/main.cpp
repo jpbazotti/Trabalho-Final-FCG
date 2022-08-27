@@ -15,6 +15,7 @@
 //  vira
 //    #include <cstdio> // Em C++
 //
+#define TINYOBJLOADER_IMPLEMENTATION 
 #include <cmath>
 #include <cstdio>
 #include <cstdlib>
@@ -27,7 +28,10 @@
 #include <sstream>
 #include <vector>
 #include <iostream>
-#include <time.h>       /* time */
+#include <time.h>
+#include <stack>
+#include <stdexcept>
+#include <algorithm>
 
 // Headers das bibliotecas OpenGL
 #include <glad/glad.h>  // Criação de contexto OpenGL 3.3
@@ -38,10 +42,43 @@
 #include <glm/vec4.hpp>
 #include <glm/gtc/type_ptr.hpp>
 
+#include <tiny_obj_loader.h>
+
 // Headers locais, definidos na pasta "include/"
 #include "utils.h"
 #include "matrices.h"
 
+
+struct ObjModel
+{
+    tinyobj::attrib_t                 attrib;
+    std::vector<tinyobj::shape_t>     shapes;
+    std::vector<tinyobj::material_t>  materials;
+
+    // Este construtor lê o modelo de um arquivo utilizando a biblioteca tinyobjloader.
+    // Veja: https://github.com/syoyo/tinyobjloader
+    ObjModel(const char* filename, const char* basepath = NULL, bool triangulate = true)
+    {
+        printf("Carregando modelo \"%s\"... ", filename);
+
+        std::string err;
+        bool ret = tinyobj::LoadObj(&attrib, &shapes, &materials, &err, filename, basepath, triangulate);
+
+        if (!err.empty())
+            fprintf(stderr, "\n%s\n", err.c_str());
+
+        if (!ret)
+            throw std::runtime_error("Erro ao carregar modelo.");
+        
+        printf("OK.\n");
+    }
+};
+
+void PushMatrix(glm::mat4 M);
+void PopMatrix(glm::mat4& M);
+
+void BuildTrianglesAndAddToVirtualScene(ObjModel*); // Constrói representação de um ObjModel como malha de triângulos para renderização
+void ComputeNormals(ObjModel* model);
 // Declaração de várias funções utilizadas em main().  Essas estão definidas
 // logo após a definição de main() neste arquivo.
 GLuint BuildTriangles();                                                     // Constrói triângulos para renderização
@@ -49,6 +86,8 @@ GLuint LoadShader_Vertex(const char *filename);                              // 
 GLuint LoadShader_Fragment(const char *filename);                            // Carrega um fragment shader
 void LoadShader(const char *filename, GLuint shader_id);                     // Função utilizada pelas duas acima
 GLuint CreateGpuProgram(GLuint vertex_shader_id, GLuint fragment_shader_id); // Cria um programa de GPU
+void DrawVirtualObject(const char* object_name); // Desenha um objeto armazenado em g_VirtualScene
+
 
 // Declaração de funções auxiliares para renderizar texto dentro da janela
 // OpenGL. Estas funções estão definidas no arquivo "textrendering.cpp".
@@ -78,15 +117,19 @@ void MouseButtonCallback(GLFWwindow *window, int button, int action, int mods);
 void CursorPosCallback(GLFWwindow *window, double xpos, double ypos);
 void ScrollCallback(GLFWwindow *window, double xoffset, double yoffset);
 glm::vec4 Bezier(std::vector<glm::vec4> controlPoints, int degree, float point);
+void LoadShadersFromFiles();
 // Definimos uma estrutura que armazenará dados necessários para renderizar
 // cada objeto da cena virtual.
 struct SceneObject
-{
-    const char *name;      // Nome do objeto
-    void *first_index;     // Índice do primeiro vértice dentro do vetor indices[] definido em BuildTriangles()
-    int num_indices;       // Número de índices do objeto dentro do vetor indices[] definido em BuildTriangles()
-    GLenum rendering_mode; // Modo de rasterização (GL_TRIANGLES, GL_TRIANGLE_STRIP, etc.)
-};
+    {
+        std::string  name;        // Nome do objeto
+        size_t       first_index; // Índice do primeiro vértice dentro do vetor indices[] definido em BuildTrianglesAndAddToVirtualScene()
+        size_t       num_indices; // Número de índices do objeto dentro do vetor indices[] definido em BuildTrianglesAndAddToVirtualScene()
+        GLenum       rendering_mode; // Modo de rasterização (GL_TRIANGLES, GL_TRIANGLE_STRIP, etc.)
+        GLuint       vertex_array_object_id; // ID do VAO onde estão armazenados os atributos do modelo
+    };
+    std::map<std::string, SceneObject> g_VirtualScene;
+    std::stack<glm::mat4>  g_MatrixStack;
 
 // Abaixo definimos variáveis globais utilizadas em várias funções do código.
 
@@ -94,7 +137,6 @@ struct SceneObject
 // (map).  Veja dentro da função BuildTriangles() como que são incluídos
 // objetos dentro da variável g_VirtualScene, e veja na função main() como
 // estes são acessados.
-std::map<const char *, SceneObject> g_VirtualScene;
 
 // Razão de proporção da janela (largura/altura). Veja função FramebufferSizeCallback().
 float g_ScreenRatio = 1.0f;
@@ -129,6 +171,13 @@ bool g_UsePerspectiveProjection = true;
 // Variável que controla se o texto informativo será mostrado na tela.
 bool g_ShowInfoText = true;
 
+GLuint vertex_shader_id;
+GLuint fragment_shader_id;
+GLuint program_id = 0;
+GLint model_uniform;
+GLint view_uniform;
+GLint projection_uniform;
+GLint object_id_uniform;
 int main()
 {
     // Inicializamos a biblioteca GLFW, utilizada para criar uma janela do
@@ -196,6 +245,8 @@ int main()
     const GLubyte *glslversion = glGetString(GL_SHADING_LANGUAGE_VERSION);
 
     printf("GPU: %s, %s, OpenGL %s, GLSL %s\n", vendor, renderer, glversion, glslversion);
+    
+    
 
     // Carregamos os shaders de vértices e de fragmentos que serão utilizados
     // para renderização. Veja slides 180-200 do documento Aula_03_Rendering_Pipeline_Grafico.pdf.
@@ -220,25 +271,16 @@ int main()
     //       |
     //       o-- ...
     //
-    GLuint vertex_shader_id = LoadShader_Vertex("../../src/shader_vertex.glsl");
-    GLuint fragment_shader_id = LoadShader_Fragment("../../src/shader_fragment.glsl");
 
     // Criamos um programa de GPU utilizando os shaders carregados acima
-    GLuint program_id = CreateGpuProgram(vertex_shader_id, fragment_shader_id);
-
+    LoadShadersFromFiles();
     // Construímos a representação de um triângulo
-    GLuint vertex_array_object_id = BuildTriangles();
 
     // Inicializamos o código para renderização de texto.
     TextRendering_Init();
 
-    // Buscamos o endereço das variáveis definidas dentro do Vertex Shader.
-    // Utilizaremos estas variáveis para enviar dados para a placa de vídeo
-    // (GPU)! Veja arquivo "shader_vertex.glsl".
-    GLint model_uniform = glGetUniformLocation(program_id, "model");                     // Variável da matriz "model"
-    GLint view_uniform = glGetUniformLocation(program_id, "view");                       // Variável da matriz "view" em shader_vertex.glsl
-    GLint projection_uniform = glGetUniformLocation(program_id, "projection");           // Variável da matriz "projection" em shader_vertex.glsl
-    GLint render_as_black_uniform = glGetUniformLocation(program_id, "render_as_black"); // Variável booleana em shader_vertex.glsl
+   
+
 
     // Habilitamos o Z-buffer. Veja slides 104-116 do documento Aula_09_Projecoes.pdf.
     glEnable(GL_DEPTH_TEST);
@@ -249,6 +291,10 @@ int main()
     // Ficamos em loop, renderizando, até que o usuário feche a janela
     float prev_time = (float)glfwGetTime();
     float delta_t = 0.0f;
+    ObjModel bunnymodel("../../data/bunny.obj");
+    ComputeNormals(&bunnymodel);
+    BuildTrianglesAndAddToVirtualScene(&bunnymodel);
+    #define BUNNY  0
     glm::vec4 carPos=glm::vec4(0.0f, 0.0f, 0.0f, 1.0f);
     glm::vec4 carForward=glm::vec4(1.0f, 0.0f, 0.0f, 0.0f);
     glm::mat4 modelCube;
@@ -278,7 +324,6 @@ int main()
         // "Ligamos" o VAO. Informamos que queremos utilizar os atributos de
         // vértices apontados pelo VAO criado pela função BuildTriangles(). Veja
         // comentários detalhados dentro da definição de BuildTriangles().
-        glBindVertexArray(vertex_array_object_id);
 
         // Computamos a posição da câmera utilizando coordenadas esféricas.  As
         // variáveis g_CameraDistance, g_CameraPhi, e g_CameraTheta são
@@ -296,7 +341,7 @@ int main()
         delta_t = current_time - prev_time;
         prev_time = current_time;
         camera_view_vector=carForward;
-        c=Matrix_Translate(-carForward.x*3,-carForward.y*3,-carForward.z*3)*carPos;
+        c=Matrix_Translate(-carForward.x*10,-carForward.y*10,-carForward.z*10)*carPos;
         if (wPressed)
         {
             //c += -w * speed * delta_t;
@@ -339,7 +384,7 @@ int main()
         // Note que, no sistema de coordenadas da câmera, os planos near e far
         // estão no sentido negativo! Veja slides 176-204 do documento Aula_09_Projecoes.pdf.
         float nearplane = -0.1f; // Posição do "near plane"
-        float farplane = -10.0f; // Posição do "far plane"
+        float farplane = -100.0f; // Posição do "far plane"
 
         if (g_UsePerspectiveProjection)
         {
@@ -423,13 +468,13 @@ int main()
         // Enviamos a matriz "model" para a placa de vídeo (GPU). Veja o
         // arquivo "shader_vertex.glsl", onde esta é efetivamente
         // aplicada em todos os pontos.
-        
-        glUniformMatrix4fv(model_uniform, 1, GL_FALSE, glm::value_ptr(modelCube));
+        glUniformMatrix4fv(model_uniform, 1 , GL_FALSE , glm::value_ptr(modelCube));
+        glUniform1i(object_id_uniform, BUNNY);
+        DrawVirtualObject("bunny");
 
         // Informamos para a placa de vídeo (GPU) que a variável booleana
         // "render_as_black" deve ser colocada como "false". Veja o arquivo
         // "shader_vertex.glsl".
-        glUniform1i(render_as_black_uniform, false);
         
         // Pedimos para a GPU rasterizar os vértices do cubo apontados pelo
         // VAO como triângulos, formando as faces do cubo. Esta
@@ -441,11 +486,7 @@ int main()
         // Veja a definição de g_VirtualScene["cube_faces"] dentro da
         // função BuildTriangles(), e veja a documentação da função
         // glDrawElements() em http://docs.gl/gl3/glDrawElements.
-        glDrawElements(
-            g_VirtualScene["cube_faces"].rendering_mode, // Veja slides 182-188 do documento Aula_04_Modelagem_Geometrica_3D.pdf
-            g_VirtualScene["cube_faces"].num_indices,
-            GL_UNSIGNED_INT,
-            (void *)g_VirtualScene["cube_faces"].first_index);
+        
 
         // Pedimos para OpenGL desenhar linhas com largura de 4 pixels.
         glLineWidth(4.0f);
@@ -469,7 +510,6 @@ int main()
         // Informamos para a placa de vídeo (GPU) que a variável booleana
         // "render_as_black" deve ser colocada como "true". Veja o arquivo
         // "shader_vertex.glsl".
-        glUniform1i(render_as_black_uniform, true);
 
         // Pedimos para a GPU rasterizar os vértices do cubo apontados pelo
         // VAO como linhas, formando as arestas pretas do cubo. Veja a
@@ -497,7 +537,6 @@ int main()
         // Informamos para a placa de vídeo (GPU) que a variável booleana
         // "render_as_black" deve ser colocada como "false". Veja o arquivo
         // "shader_vertex.glsl".
-        glUniform1i(render_as_black_uniform, false);
 
         // Pedimos para a GPU rasterizar os vértices dos eixos XYZ
         // apontados pelo VAO como linhas. Veja a definição de
@@ -550,6 +589,274 @@ int main()
     // Fim do programa
     return 0;
 }
+void PushMatrix(glm::mat4 M)
+{
+    g_MatrixStack.push(M);
+}
+
+void PopMatrix(glm::mat4& M)
+{
+    if ( g_MatrixStack.empty() )
+    {
+        M = Matrix_Identity();
+    }
+    else
+    {
+        M = g_MatrixStack.top();
+        g_MatrixStack.pop();
+    }
+}
+void ComputeNormals(ObjModel* model)
+{
+    if ( !model->attrib.normals.empty() )
+        return;
+
+    // Primeiro computamos as normais para todos os TRIÂNGULOS.
+    // Segundo, computamos as normais dos VÉRTICES através do método proposto
+    // por Gouraud, onde a normal de cada vértice vai ser a média das normais de
+    // todas as faces que compartilham este vértice.
+
+    size_t num_vertices = model->attrib.vertices.size() / 3;
+
+    std::vector<int> num_triangles_per_vertex(num_vertices, 0);
+    std::vector<glm::vec4> vertex_normals(num_vertices, glm::vec4(0.0f,0.0f,0.0f,0.0f));
+
+    for (size_t shape = 0; shape < model->shapes.size(); ++shape)
+    {
+        size_t num_triangles = model->shapes[shape].mesh.num_face_vertices.size();
+
+        for (size_t triangle = 0; triangle < num_triangles; ++triangle)
+        {
+            assert(model->shapes[shape].mesh.num_face_vertices[triangle] == 3);
+
+            glm::vec4  vertices[3];
+            for (size_t vertex = 0; vertex < 3; ++vertex)
+            {
+                tinyobj::index_t idx = model->shapes[shape].mesh.indices[3*triangle + vertex];
+                const float vx = model->attrib.vertices[3*idx.vertex_index + 0];
+                const float vy = model->attrib.vertices[3*idx.vertex_index + 1];
+                const float vz = model->attrib.vertices[3*idx.vertex_index + 2];
+                vertices[vertex] = glm::vec4(vx,vy,vz,1.0);
+            }
+
+            const glm::vec4  a = vertices[0];
+            const glm::vec4  b = vertices[1];
+            const glm::vec4  c = vertices[2];
+
+            // PREENCHA AQUI o cálculo da normal de um triângulo cujos vértices
+            // estão nos pontos "a", "b", e "c", definidos no sentido anti-horário.
+            const glm::vec4  n = glm::vec4(0.0f,0.0f,0.0f,0.0f);
+
+            for (size_t vertex = 0; vertex < 3; ++vertex)
+            {
+                tinyobj::index_t idx = model->shapes[shape].mesh.indices[3*triangle + vertex];
+                num_triangles_per_vertex[idx.vertex_index] += 1;
+                vertex_normals[idx.vertex_index] += n;
+                model->shapes[shape].mesh.indices[3*triangle + vertex].normal_index = idx.vertex_index;
+            }
+        }
+    }
+
+    model->attrib.normals.resize( 3*num_vertices );
+
+    for (size_t i = 0; i < vertex_normals.size(); ++i)
+    {
+        glm::vec4 n = vertex_normals[i] / (float)num_triangles_per_vertex[i];
+        n /= norm(n);
+        model->attrib.normals[3*i + 0] = n.x;
+        model->attrib.normals[3*i + 1] = n.y;
+        model->attrib.normals[3*i + 2] = n.z;
+    }
+}
+
+// Constrói triângulos para futura renderização a partir de um ObjModel.
+void BuildTrianglesAndAddToVirtualScene(ObjModel* model)
+{
+    GLuint vertex_array_object_id;
+    glGenVertexArrays(1, &vertex_array_object_id);
+    glBindVertexArray(vertex_array_object_id);
+
+    std::vector<GLuint> indices;
+    std::vector<float>  model_coefficients;
+    std::vector<float>  normal_coefficients;
+    std::vector<float>  texture_coefficients;
+
+    for (size_t shape = 0; shape < model->shapes.size(); ++shape)
+    {
+        size_t first_index = indices.size();
+        size_t num_triangles = model->shapes[shape].mesh.num_face_vertices.size();
+
+        for (size_t triangle = 0; triangle < num_triangles; ++triangle)
+        {
+            assert(model->shapes[shape].mesh.num_face_vertices[triangle] == 3);
+
+            for (size_t vertex = 0; vertex < 3; ++vertex)
+            {
+                tinyobj::index_t idx = model->shapes[shape].mesh.indices[3*triangle + vertex];
+
+                indices.push_back(first_index + 3*triangle + vertex);
+
+                const float vx = model->attrib.vertices[3*idx.vertex_index + 0];
+                const float vy = model->attrib.vertices[3*idx.vertex_index + 1];
+                const float vz = model->attrib.vertices[3*idx.vertex_index + 2];
+                //printf("tri %d vert %d = (%.2f, %.2f, %.2f)\n", (int)triangle, (int)vertex, vx, vy, vz);
+                model_coefficients.push_back( vx ); // X
+                model_coefficients.push_back( vy ); // Y
+                model_coefficients.push_back( vz ); // Z
+                model_coefficients.push_back( 1.0f ); // W
+
+                // Inspecionando o código da tinyobjloader, o aluno Bernardo
+                // Sulzbach (2017/1) apontou que a maneira correta de testar se
+                // existem normais e coordenadas de textura no ObjModel é
+                // comparando se o índice retornado é -1. Fazemos isso abaixo.
+
+                if ( idx.normal_index != -1 )
+                {
+                    const float nx = model->attrib.normals[3*idx.normal_index + 0];
+                    const float ny = model->attrib.normals[3*idx.normal_index + 1];
+                    const float nz = model->attrib.normals[3*idx.normal_index + 2];
+                    normal_coefficients.push_back( nx ); // X
+                    normal_coefficients.push_back( ny ); // Y
+                    normal_coefficients.push_back( nz ); // Z
+                    normal_coefficients.push_back( 0.0f ); // W
+                }
+
+                if ( idx.texcoord_index != -1 )
+                {
+                    const float u = model->attrib.texcoords[2*idx.texcoord_index + 0];
+                    const float v = model->attrib.texcoords[2*idx.texcoord_index + 1];
+                    texture_coefficients.push_back( u );
+                    texture_coefficients.push_back( v );
+                }
+            }
+        }
+
+        size_t last_index = indices.size() - 1;
+
+        SceneObject theobject;
+        theobject.name           = model->shapes[shape].name;
+        theobject.first_index    = first_index; // Primeiro índice
+        theobject.num_indices    = last_index - first_index + 1; // Número de indices
+        theobject.rendering_mode = GL_TRIANGLES;       // Índices correspondem ao tipo de rasterização GL_TRIANGLES.
+        theobject.vertex_array_object_id = vertex_array_object_id;
+
+        g_VirtualScene[model->shapes[shape].name] = theobject;
+    }
+
+    GLuint VBO_model_coefficients_id;
+    glGenBuffers(1, &VBO_model_coefficients_id);
+    glBindBuffer(GL_ARRAY_BUFFER, VBO_model_coefficients_id);
+    glBufferData(GL_ARRAY_BUFFER, model_coefficients.size() * sizeof(float), NULL, GL_STATIC_DRAW);
+    glBufferSubData(GL_ARRAY_BUFFER, 0, model_coefficients.size() * sizeof(float), model_coefficients.data());
+    GLuint location = 0; // "(location = 0)" em "shader_vertex.glsl"
+    GLint  number_of_dimensions = 4; // vec4 em "shader_vertex.glsl"
+    glVertexAttribPointer(location, number_of_dimensions, GL_FLOAT, GL_FALSE, 0, 0);
+    glEnableVertexAttribArray(location);
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+
+    if ( !normal_coefficients.empty() )
+    {
+        GLuint VBO_normal_coefficients_id;
+        glGenBuffers(1, &VBO_normal_coefficients_id);
+        glBindBuffer(GL_ARRAY_BUFFER, VBO_normal_coefficients_id);
+        glBufferData(GL_ARRAY_BUFFER, normal_coefficients.size() * sizeof(float), NULL, GL_STATIC_DRAW);
+        glBufferSubData(GL_ARRAY_BUFFER, 0, normal_coefficients.size() * sizeof(float), normal_coefficients.data());
+        location = 1; // "(location = 1)" em "shader_vertex.glsl"
+        number_of_dimensions = 4; // vec4 em "shader_vertex.glsl"
+        glVertexAttribPointer(location, number_of_dimensions, GL_FLOAT, GL_FALSE, 0, 0);
+        glEnableVertexAttribArray(location);
+        glBindBuffer(GL_ARRAY_BUFFER, 0);
+    }
+
+    if ( !texture_coefficients.empty() )
+    {
+        GLuint VBO_texture_coefficients_id;
+        glGenBuffers(1, &VBO_texture_coefficients_id);
+        glBindBuffer(GL_ARRAY_BUFFER, VBO_texture_coefficients_id);
+        glBufferData(GL_ARRAY_BUFFER, texture_coefficients.size() * sizeof(float), NULL, GL_STATIC_DRAW);
+        glBufferSubData(GL_ARRAY_BUFFER, 0, texture_coefficients.size() * sizeof(float), texture_coefficients.data());
+        location = 2; // "(location = 1)" em "shader_vertex.glsl"
+        number_of_dimensions = 2; // vec2 em "shader_vertex.glsl"
+        glVertexAttribPointer(location, number_of_dimensions, GL_FLOAT, GL_FALSE, 0, 0);
+        glEnableVertexAttribArray(location);
+        glBindBuffer(GL_ARRAY_BUFFER, 0);
+    }
+
+    GLuint indices_id;
+    glGenBuffers(1, &indices_id);
+
+    // "Ligamos" o buffer. Note que o tipo agora é GL_ELEMENT_ARRAY_BUFFER.
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, indices_id);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(GLuint), NULL, GL_STATIC_DRAW);
+    glBufferSubData(GL_ELEMENT_ARRAY_BUFFER, 0, indices.size() * sizeof(GLuint), indices.data());
+    // glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0); // XXX Errado!
+    //
+
+    // "Desligamos" o VAO, evitando assim que operações posteriores venham a
+    // alterar o mesmo. Isso evita bugs.
+    glBindVertexArray(0);
+}
+void DrawVirtualObject(const char* object_name)
+{
+    // "Ligamos" o VAO. Informamos que queremos utilizar os atributos de
+    // vértices apontados pelo VAO criado pela função BuildTrianglesAndAddToVirtualScene(). Veja
+    // comentários detalhados dentro da definição de BuildTrianglesAndAddToVirtualScene().
+    glBindVertexArray(g_VirtualScene[object_name].vertex_array_object_id);
+
+    // Pedimos para a GPU rasterizar os vértices dos eixos XYZ
+    // apontados pelo VAO como linhas. Veja a definição de
+    // g_VirtualScene[""] dentro da função BuildTrianglesAndAddToVirtualScene(), e veja
+    // a documentação da função glDrawElements() em
+    // http://docs.gl/gl3/glDrawElements.
+    glDrawElements(
+        g_VirtualScene[object_name].rendering_mode,
+        g_VirtualScene[object_name].num_indices,
+        GL_UNSIGNED_INT,
+        (void*)(g_VirtualScene[object_name].first_index * sizeof(GLuint))
+    );
+
+    // "Desligamos" o VAO, evitando assim que operações posteriores venham a
+    // alterar o mesmo. Isso evita bugs.
+    glBindVertexArray(0);
+}
+void LoadShadersFromFiles()
+{
+    // Note que o caminho para os arquivos "shader_vertex.glsl" e
+    // "shader_fragment.glsl" estão fixados, sendo que assumimos a existência
+    // da seguinte estrutura no sistema de arquivos:
+    //
+    //    + FCG_Lab_01/
+    //    |
+    //    +--+ bin/
+    //    |  |
+    //    |  +--+ Release/  (ou Debug/ ou Linux/)
+    //    |     |
+    //    |     o-- main.exe
+    //    |
+    //    +--+ src/
+    //       |
+    //       o-- shader_vertex.glsl
+    //       |
+    //       o-- shader_fragment.glsl
+    //
+    vertex_shader_id = LoadShader_Vertex("../../src/shader_vertex.glsl");
+    fragment_shader_id = LoadShader_Fragment("../../src/shader_fragment.glsl");
+
+    // Deletamos o programa de GPU anterior, caso ele exista.
+    if ( program_id != 0 )
+        glDeleteProgram(program_id);
+
+    // Criamos um programa de GPU utilizando os shaders carregados acima.
+    program_id = CreateGpuProgram(vertex_shader_id, fragment_shader_id);
+
+    // Buscamos o endereço das variáveis definidas dentro do Vertex Shader.
+    // Utilizaremos estas variáveis para enviar dados para a placa de vídeo
+    // (GPU)! Veja arquivo "shader_vertex.glsl" e "shader_fragment.glsl".
+    model_uniform           = glGetUniformLocation(program_id, "model"); // Variável da matriz "model"
+    view_uniform            = glGetUniformLocation(program_id, "view"); // Variável da matriz "view" em shader_vertex.glsl
+    projection_uniform      = glGetUniformLocation(program_id, "projection"); // Variável da matriz "projection" em shader_vertex.glsl
+    object_id_uniform       = glGetUniformLocation(program_id, "object_id"); // Variável "object_id" em shader_fragment.glsl
+}
 glm::vec4 Bezier(std::vector<glm::vec4> controlPoints, int degree, float point)
 {
     std::vector<glm::vec4> oldPoints = controlPoints;
@@ -565,252 +872,6 @@ glm::vec4 Bezier(std::vector<glm::vec4> controlPoints, int degree, float point)
     return oldPoints[0];
 }
 // Constrói triângulos para futura renderização
-GLuint BuildTriangles()
-{
-    // Primeiro, definimos os atributos de cada vértice.
-
-    // A posição de cada vértice é definida por coeficientes em um sistema de
-    // coordenadas local de cada modelo geométrico. Note o uso de coordenadas
-    // homogêneas.  Veja as seguintes referências:
-    //
-    //  - slides 35-48 do documento Aula_08_Sistemas_de_Coordenadas.pdf;
-    //  - slides 184-190 do documento Aula_08_Sistemas_de_Coordenadas.pdf;
-    //
-    // Este vetor "model_coefficients" define a GEOMETRIA (veja slides 103-110 do documento Aula_04_Modelagem_Geometrica_3D.pdf).
-    //
-    GLfloat model_coefficients[] = {
-        // Vértices de um cubo
-        //    X      Y     Z     W
-        -0.5f, 0.5f, 0.5f, 1.0f,   // posição do vértice 0
-        -0.5f, -0.5f, 0.5f, 1.0f,  // posição do vértice 1
-        0.5f, -0.5f, 0.5f, 1.0f,   // posição do vértice 2
-        0.5f, 0.5f, 0.5f, 1.0f,    // posição do vértice 3
-        -0.5f, 0.5f, -0.5f, 1.0f,  // posição do vértice 4
-        -0.5f, -0.5f, -0.5f, 1.0f, // posição do vértice 5
-        0.5f, -0.5f, -0.5f, 1.0f,  // posição do vértice 6
-        0.5f, 0.5f, -0.5f, 1.0f,   // posição do vértice 7
-                                   // Vértices para desenhar o eixo X
-                                   //    X      Y     Z     W
-        0.0f, 0.0f, 0.0f, 1.0f,    // posição do vértice 8
-        1.0f, 0.0f, 0.0f, 1.0f,    // posição do vértice 9
-                                   // Vértices para desenhar o eixo Y
-                                   //    X      Y     Z     W
-        0.0f, 0.0f, 0.0f, 1.0f,    // posição do vértice 10
-        0.0f, 1.0f, 0.0f, 1.0f,    // posição do vértice 11
-                                   // Vértices para desenhar o eixo Z
-                                   //    X      Y     Z     W
-        0.0f, 0.0f, 0.0f, 1.0f,    // posição do vértice 12
-        0.0f, 0.0f, 1.0f, 1.0f,    // posição do vértice 13
-    };
-
-    // Criamos o identificador (ID) de um Vertex Buffer Object (VBO).  Um VBO é
-    // um buffer de memória que irá conter os valores de um certo atributo de
-    // um conjunto de vértices; por exemplo: posição, cor, normais, coordenadas
-    // de textura.  Neste exemplo utilizaremos vários VBOs, um para cada tipo de atributo.
-    // Agora criamos um VBO para armazenarmos um atributo: posição.
-    GLuint VBO_model_coefficients_id;
-    glGenBuffers(1, &VBO_model_coefficients_id);
-
-    // Criamos o identificador (ID) de um Vertex Array Object (VAO).  Um VAO
-    // contém a definição de vários atributos de um certo conjunto de vértices;
-    // isto é, um VAO irá conter ponteiros para vários VBOs.
-    GLuint vertex_array_object_id;
-    glGenVertexArrays(1, &vertex_array_object_id);
-
-    // "Ligamos" o VAO ("bind"). Informamos que iremos atualizar o VAO cujo ID
-    // está contido na variável "vertex_array_object_id".
-    glBindVertexArray(vertex_array_object_id);
-
-    // "Ligamos" o VBO ("bind"). Informamos que o VBO cujo ID está contido na
-    // variável VBO_model_coefficients_id será modificado a seguir. A
-    // constante "GL_ARRAY_BUFFER" informa que esse buffer é de fato um VBO, e
-    // irá conter atributos de vértices.
-    glBindBuffer(GL_ARRAY_BUFFER, VBO_model_coefficients_id);
-
-    // Alocamos memória para o VBO "ligado" acima. Como queremos armazenar
-    // nesse VBO todos os valores contidos no array "model_coefficients", pedimos
-    // para alocar um número de bytes exatamente igual ao tamanho ("size")
-    // desse array. A constante "GL_STATIC_DRAW" dá uma dica para o driver da
-    // GPU sobre como utilizaremos os dados do VBO. Neste caso, estamos dizendo
-    // que não pretendemos alterar tais dados (são estáticos: "STATIC"), e
-    // também dizemos que tais dados serão utilizados para renderizar ou
-    // desenhar ("DRAW").  Pense que:
-    //
-    //            glBufferData()  ==  malloc() do C  ==  new do C++.
-    //
-    glBufferData(GL_ARRAY_BUFFER, sizeof(model_coefficients), NULL, GL_STATIC_DRAW);
-
-    // Finalmente, copiamos os valores do array model_coefficients para dentro do
-    // VBO "ligado" acima.  Pense que:
-    //
-    //            glBufferSubData()  ==  memcpy() do C.
-    //
-    glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(model_coefficients), model_coefficients);
-
-    // Precisamos então informar um índice de "local" ("location"), o qual será
-    // utilizado no shader "shader_vertex.glsl" para acessar os valores
-    // armazenados no VBO "ligado" acima. Também, informamos a dimensão (número de
-    // coeficientes) destes atributos. Como em nosso caso são pontos em coordenadas
-    // homogêneas, temos quatro coeficientes por vértice (X,Y,Z,W). Isso define
-    // um tipo de dado chamado de "vec4" em "shader_vertex.glsl": um vetor com
-    // quatro coeficientes. Finalmente, informamos que os dados estão em ponto
-    // flutuante com 32 bits (GL_FLOAT).
-    // Esta função também informa que o VBO "ligado" acima em glBindBuffer()
-    // está dentro do VAO "ligado" acima por glBindVertexArray().
-    // Veja https://www.khronos.org/opengl/wiki/Vertex_Specification#Vertex_Buffer_Object
-    GLuint location = 0;            // "(location = 0)" em "shader_vertex.glsl"
-    GLint number_of_dimensions = 4; // vec4 em "shader_vertex.glsl"
-    glVertexAttribPointer(location, number_of_dimensions, GL_FLOAT, GL_FALSE, 0, 0);
-
-    // "Ativamos" os atributos. Informamos que os atributos com índice de local
-    // definido acima, na variável "location", deve ser utilizado durante o
-    // rendering.
-    glEnableVertexAttribArray(location);
-
-    // "Desligamos" o VBO, evitando assim que operações posteriores venham a
-    // alterar o mesmo. Isso evita bugs.
-    glBindBuffer(GL_ARRAY_BUFFER, 0);
-
-    // Agora repetimos todos os passos acima para atribuir um novo atributo a
-    // cada vértice: uma cor (veja slides 109-112 do documento Aula_03_Rendering_Pipeline_Grafico.pdf e slide 111 do documento Aula_04_Modelagem_Geometrica_3D.pdf).
-    // Tal cor é definida como coeficientes RGBA: Red, Green, Blue, Alpha;
-    // isto é: Vermelho, Verde, Azul, Alpha (valor de transparência).
-    // Conversaremos sobre sistemas de cores nas aulas de Modelos de Iluminação.
-    GLfloat color_coefficients[] = {
-        // Cores dos vértices do cubo
-        //  R     G     B     A
-        1.0f, 0.5f, 0.0f, 1.0f, // cor do vértice 0
-        1.0f, 0.5f, 0.0f, 1.0f, // cor do vértice 1
-        0.0f, 0.5f, 1.0f, 1.0f, // cor do vértice 2
-        0.0f, 0.5f, 1.0f, 1.0f, // cor do vértice 3
-        1.0f, 0.5f, 0.0f, 1.0f, // cor do vértice 4
-        1.0f, 0.5f, 0.0f, 1.0f, // cor do vértice 5
-        0.0f, 0.5f, 1.0f, 1.0f, // cor do vértice 6
-        0.0f, 0.5f, 1.0f, 1.0f, // cor do vértice 7
-                                // Cores para desenhar o eixo X
-        1.0f, 0.0f, 0.0f, 1.0f, // cor do vértice 8
-        1.0f, 0.0f, 0.0f, 1.0f, // cor do vértice 9
-                                // Cores para desenhar o eixo Y
-        0.0f, 1.0f, 0.0f, 1.0f, // cor do vértice 10
-        0.0f, 1.0f, 0.0f, 1.0f, // cor do vértice 11
-                                // Cores para desenhar o eixo Z
-        0.0f, 0.0f, 1.0f, 1.0f, // cor do vértice 12
-        0.0f, 0.0f, 1.0f, 1.0f, // cor do vértice 13
-    };
-    GLuint VBO_color_coefficients_id;
-    glGenBuffers(1, &VBO_color_coefficients_id);
-    glBindBuffer(GL_ARRAY_BUFFER, VBO_color_coefficients_id);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(color_coefficients), NULL, GL_STATIC_DRAW);
-    glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(color_coefficients), color_coefficients);
-    location = 1;             // "(location = 1)" em "shader_vertex.glsl"
-    number_of_dimensions = 4; // vec4 em "shader_vertex.glsl"
-    glVertexAttribPointer(location, number_of_dimensions, GL_FLOAT, GL_FALSE, 0, 0);
-    glEnableVertexAttribArray(location);
-    glBindBuffer(GL_ARRAY_BUFFER, 0);
-
-    // Vamos então definir polígonos utilizando os vértices do array
-    // model_coefficients.
-    //
-    // Para referência sobre os modos de renderização, veja slides 182-188 do documento Aula_04_Modelagem_Geometrica_3D.pdf.
-    //
-    // Este vetor "indices" define a TOPOLOGIA (veja slides 103-110 do documento Aula_04_Modelagem_Geometrica_3D.pdf).
-    //
-    GLuint indices[] = {
-        // Definimos os índices dos vértices que definem as FACES de um cubo
-        // através de 12 triângulos que serão desenhados com o modo de renderização
-        // GL_TRIANGLES.
-        0, 1, 2, // triângulo 1
-        7, 6, 5, // triângulo 2
-        3, 2, 6, // triângulo 3
-        4, 0, 3, // triângulo 4
-        4, 5, 1, // triângulo 5
-        1, 5, 6, // triângulo 6
-        0, 2, 3, // triângulo 7
-        7, 5, 4, // triângulo 8
-        3, 6, 7, // triângulo 9
-        4, 3, 7, // triângulo 10
-        4, 1, 0, // triângulo 11
-        1, 6, 2, // triângulo 12
-                 // Definimos os índices dos vértices que definem as ARESTAS de um cubo
-                 // através de 12 linhas que serão desenhadas com o modo de renderização
-                 // GL_LINES.
-        0, 1,    // linha 1
-        1, 2,    // linha 2
-        2, 3,    // linha 3
-        3, 0,    // linha 4
-        0, 4,    // linha 5
-        4, 7,    // linha 6
-        7, 6,    // linha 7
-        6, 2,    // linha 8
-        6, 5,    // linha 9
-        5, 4,    // linha 10
-        5, 1,    // linha 11
-        7, 3,    // linha 12
-                 // Definimos os índices dos vértices que definem as linhas dos eixos X, Y,
-                 // Z, que serão desenhados com o modo GL_LINES.
-        8, 9,    // linha 1
-        10, 11,  // linha 2
-        12, 13   // linha 3
-    };
-
-    // Criamos um primeiro objeto virtual (SceneObject) que se refere às faces
-    // coloridas do cubo.
-    SceneObject cube_faces;
-    cube_faces.name = "Cubo (faces coloridas)";
-    cube_faces.first_index = (void *)0;       // Primeiro índice está em indices[0]
-    cube_faces.num_indices = 36;              // Último índice está em indices[35]; total de 36 índices.
-    cube_faces.rendering_mode = GL_TRIANGLES; // Índices correspondem ao tipo de rasterização GL_TRIANGLES.
-
-    // Adicionamos o objeto criado acima na nossa cena virtual (g_VirtualScene).
-    g_VirtualScene["cube_faces"] = cube_faces;
-
-    // Criamos um segundo objeto virtual (SceneObject) que se refere às arestas
-    // pretas do cubo.
-    SceneObject cube_edges;
-    cube_edges.name = "Cubo (arestas pretas)";
-    cube_edges.first_index = (void *)(36 * sizeof(GLuint)); // Primeiro índice está em indices[36]
-    cube_edges.num_indices = 24;                            // Último índice está em indices[59]; total de 24 índices.
-    cube_edges.rendering_mode = GL_LINES;                   // Índices correspondem ao tipo de rasterização GL_LINES.
-
-    // Adicionamos o objeto criado acima na nossa cena virtual (g_VirtualScene).
-    g_VirtualScene["cube_edges"] = cube_edges;
-
-    // Criamos um terceiro objeto virtual (SceneObject) que se refere aos eixos XYZ.
-    SceneObject axes;
-    axes.name = "Eixos XYZ";
-    axes.first_index = (void *)(60 * sizeof(GLuint)); // Primeiro índice está em indices[60]
-    axes.num_indices = 6;                             // Último índice está em indices[65]; total de 6 índices.
-    axes.rendering_mode = GL_LINES;                   // Índices correspondem ao tipo de rasterização GL_LINES.
-    g_VirtualScene["axes"] = axes;
-
-    // Criamos um buffer OpenGL para armazenar os índices acima
-    GLuint indices_id;
-    glGenBuffers(1, &indices_id);
-
-    // "Ligamos" o buffer. Note que o tipo agora é GL_ELEMENT_ARRAY_BUFFER.
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, indices_id);
-
-    // Alocamos memória para o buffer.
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), NULL, GL_STATIC_DRAW);
-
-    // Copiamos os valores do array indices[] para dentro do buffer.
-    glBufferSubData(GL_ELEMENT_ARRAY_BUFFER, 0, sizeof(indices), indices);
-
-    // NÃO faça a chamada abaixo! Diferente de um VBO (GL_ARRAY_BUFFER), um
-    // array de índices (GL_ELEMENT_ARRAY_BUFFER) não pode ser "desligado",
-    // caso contrário o VAO irá perder a informação sobre os índices.
-    //
-    // glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0); // XXX Errado!
-    //
-
-    // "Desligamos" o VAO, evitando assim que operações posteriores venham a
-    // alterar o mesmo. Isso evita bugs.
-    glBindVertexArray(0);
-
-    // Retornamos o ID do VAO. Isso é tudo que será necessário para renderizar
-    // os triângulos definidos acima. Veja a chamada glDrawElements() em main().
-    return vertex_array_object_id;
-}
 
 // Carrega um Vertex Shader de um arquivo GLSL. Veja definição de LoadShader() abaixo.
 GLuint LoadShader_Vertex(const char *filename)
