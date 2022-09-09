@@ -20,7 +20,7 @@ uniform mat4 projection;
 
 // Identificador que define qual objeto está sendo desenhado no momento
 #define SPHERE 0
-#define BUNNY  1
+#define BLUE_FALCON  1
 #define PLANE  2
 uniform int object_id;
 
@@ -93,7 +93,7 @@ void main()
         
         
     }
-    else if ( object_id == BUNNY )
+    else if ( object_id == BLUE_FALCON )
     {
         // PREENCHA AQUI as coordenadas de textura do coelho, computadas com
         // projeção planar XY em COORDENADAS DO MODELO. Utilize como referência

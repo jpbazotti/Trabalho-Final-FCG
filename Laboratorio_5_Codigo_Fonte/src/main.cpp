@@ -285,7 +285,7 @@ int main(int argc, char* argv[])
     ComputeNormals(&spheremodel);
     BuildTrianglesAndAddToVirtualScene(&spheremodel);
 
-    ObjModel bunnymodel("../../data/bunny.obj");
+    ObjModel bunnymodel("../../data/BlueFalcon.obj");
     ComputeNormals(&bunnymodel);
     BuildTrianglesAndAddToVirtualScene(&bunnymodel);
 
@@ -306,16 +306,18 @@ int main(int argc, char* argv[])
     glEnable(GL_DEPTH_TEST);
 
     // Habilitamos o Backface Culling. Veja slides 23-34 do documento Aula_13_Clipping_and_Culling.pdf.
-    glEnable(GL_CULL_FACE);
-    glCullFace(GL_BACK);
-    glFrontFace(GL_CCW);
+    //glEnable(GL_CULL_FACE);
+    //glCullFace(GL_BACK);
+    //glFrontFace(GL_CCW);
     float prev_time = (float)glfwGetTime();
     float delta_t = 0.0f;
     glm::vec4 carPos=glm::vec4(0.0f, 0.0f, 0.0f, 1.0f);
     glm::vec4 carForward=glm::vec4(1.0f, 0.0f, 0.0f, 0.0f);
     glm::mat4 modelCube;
     modelCube = Matrix_Identity();
-    modelCube = Matrix_Translate(carPos.x,carPos.y,carPos.z);
+    modelCube = Matrix_Translate(carPos.x,carPos.y,carPos.z)*modelCube;
+    modelCube = Matrix_Scale(0.1,0.1,0.1)*modelCube;
+    modelCube = Matrix_Rotate_Y(3.141592/2)*modelCube;
     // Ficamos em loop, renderizando, até que o usuário feche a janela
     while (!glfwWindowShouldClose(window))
     {
@@ -351,9 +353,11 @@ int main(int argc, char* argv[])
         prev_time = current_time;
         // Abaixo definimos as varáveis que efetivamente definem a câmera virtual.
         // Veja slides 195-227 e 229-234 do documento Aula_08_Sistemas_de_Coordenadas.pdf.
-        glm::vec4 camera_position_c  = Matrix_Translate(-carForward.x*5,-carForward.y*5,-carForward.z*5)*carPos; // Ponto "c", centro da câmera
+        //glm::vec4 camera_position_c  = Matrix_Translate(-carForward.x*5,-carForward.y*5,-carForward.z*5)*carPos; // Ponto "c", centro da câmera
+        glm::vec4 camera_position_c  = glm::vec4(x,y,z,1.0f);
         glm::vec4 camera_lookat_l    = glm::vec4(0.0f,0.0f,0.0f,1.0f); // Ponto "l", para onde a câmera (look-at) estará sempre olhando
-        glm::vec4 camera_view_vector = carForward; // Vetor "view", sentido para onde a câmera está virada
+        //glm::vec4 camera_view_vector = carForward; // Vetor "view", sentido para onde a câmera está virada
+        glm::vec4 camera_view_vector = camera_lookat_l - camera_position_c; 
         glm::vec4 camera_up_vector   = glm::vec4(0.0f,1.0f,0.0f,0.0f); // Vetor "up" fixado para apontar para o "céu" (eito Y global)
 
         // Computamos a matriz "View" utilizando os parâmetros da câmera para
@@ -443,7 +447,7 @@ int main(int argc, char* argv[])
         // Desenhamos o modelo do coelho
         glUniformMatrix4fv(model_uniform, 1 , GL_FALSE , glm::value_ptr(modelCube));
         glUniform1i(object_id_uniform, BUNNY);
-        DrawVirtualObject("bunny");
+        DrawVirtualObject("falcon");
 
         // Desenhamos o plano do chão
         model = Matrix_Translate(0.0f,-1.1f,0.0f);
