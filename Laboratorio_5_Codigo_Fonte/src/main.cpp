@@ -29,7 +29,7 @@
 #include <sstream>
 #include <stdexcept>
 #include <algorithm>
-
+#include <iostream>
 // Headers das bibliotecas OpenGL
 #include <glad/glad.h>   // Criação de contexto OpenGL 3.3
 #include <GLFW/glfw3.h>  // Criação de janelas do sistema operacional
@@ -49,7 +49,7 @@
 #include "matrices.h"
 #include "textRendering.h"
 #include "bezier.h"
-
+#define PI 3.14159265358979323846
 // Estrutura que representa um modelo geométrico carregado a partir de um
 // arquivo ".obj". Veja https://en.wikipedia.org/wiki/Wavefront_.obj_file .
 struct ObjModel
@@ -301,26 +301,32 @@ int main(int argc, char* argv[])
     modelPlayer = Matrix_Translate(carPos.x,carPos.y,carPos.z)*modelPlayer;
     modelPlayer = Matrix_Scale(0.1,0.1,0.1)*modelPlayer;
     modelPlayer = Matrix_Rotate_Y(3.141592/2)*modelPlayer;
+    glm::vec4 oldBezier1 = glm::vec4(0.0f, 0.0f, 0.0f, 1.0f);
+    glm::vec4 oldBezier2 = glm::vec4(0.0f, 0.0f, 0.0f, 1.0f);
 
     glm::mat4 modelOponnent1;
     modelOponnent1 = Matrix_Identity();
-    modelOponnent1 = Matrix_Translate(carPos.x,carPos.y,carPos.z)*modelOponnent1;
+    modelOponnent1 = Matrix_Translate(oldBezier1.x,oldBezier1.y,oldBezier1.z)*modelOponnent1;
     modelOponnent1 = Matrix_Scale(0.1,0.1,0.1)*modelOponnent1;
     modelOponnent1 = Matrix_Rotate_Y(3.141592/2)*modelOponnent1;
+    glm::vec4 opponnent1forward=glm::vec4(1.0f, 0.0f, 0.0f, 0.0f);
+    glm::vec4 opponnent1pos=glm::vec4(0.0f, 0.0f, 0.0f, 1.0f);
 
     glm::mat4 modelOponnent2;
     modelOponnent2 = Matrix_Identity();
-    modelOponnent2 = Matrix_Translate(carPos.x,carPos.y,carPos.z)*modelOponnent2;
+    modelOponnent2 = Matrix_Translate(oldBezier2.x,oldBezier2.y,oldBezier2.z)*modelOponnent2;
     modelOponnent2 = Matrix_Scale(0.1,0.1,0.1)*modelOponnent2;
     modelOponnent2 = Matrix_Rotate_Y(3.141592/2)*modelOponnent2;
-
-
+    glm::vec4 opponnent2forward=glm::vec4(1.0f, 0.0f, 0.0f, 0.0f);
+    glm::vec4 opponnent2pos=glm::vec4(0.0f, 0.0f, 0.0f, 1.0f);
+    
+    
     std::vector<glm::vec4> controlPoints;
     //gera uma curvar aleatoria, com valores xyz dos pontos de controle entre  -1 a 1]
-
-    for(int i = 0 ;i<5; i++){
-        controlPoints.push_back(glm::vec4((float)((rand() % 2000)-1000)/(float)1000 , (float)((rand() % 2000)-1000)/(float)1000, (float)((rand() % 2000)-1000)/(float)1000, 1.0f));
-    }
+    controlPoints.push_back(oldBezier1);
+    controlPoints.push_back(glm::vec4(30.0f, 0.0f, 1.6f, 1.0f));
+    controlPoints.push_back(glm::vec4(30.0f, 0.0f, 3.3f, 1.0f));
+    controlPoints.push_back(glm::vec4(0.0f, 0.0f, 5.0f, 1.0f));
     // Ficamos em loop, renderizando, até que o usuário feche a janela
     while (!glfwWindowShouldClose(window))
     {
@@ -373,7 +379,7 @@ int main(int argc, char* argv[])
         // Note que, no sistema de coordenadas da câmera, os planos near e far
         // estão no sentido negativo! Veja slides 176-204 do documento Aula_09_Projecoes.pdf.
         float nearplane = -0.1f;  // Posição do "near plane"
-        float farplane  = -10.0f; // Posição do "far plane"
+        float farplane  = -30.0f; // Posição do "far plane"
 
         if (g_UsePerspectiveProjection)
         {
@@ -451,18 +457,52 @@ int main(int argc, char* argv[])
         glUniformMatrix4fv(model_uniform, 1 , GL_FALSE , glm::value_ptr(modelPlayer));
         glUniform1i(object_id_uniform, BLUE_FALCON);
         DrawVirtualObject("falcon");
+
+        float bezierTime = (sin(current_time)+1)/2;
+         //oponnent 1
+
+        glm::vec4 BezierPoint1 = Bezier(controlPoints, 3, bezierTime);
+        glm::vec4 newPoint1=BezierPoint1-oldBezier1;
         
+        float dotprod=dotproduct(normalize(newPoint1),opponnent1forward);
+        if(dotprod>1){
+            dotprod=1;
+        }
+        if(dotprod<-1){
+            dotprod=-1;
+        }
+        float angle1 = acos(dotprod);
+        glm::vec4 cross=crossproduct(newPoint1,opponnent1forward);
+        if(cross.y<0){
+            angle1=-1*angle1;
+        }
+        std::cout<< "curPos:"<<opponnent1pos.x<<"," << opponnent1pos.y<<"," <<opponnent1pos.z <<","<<opponnent1pos.w <<"\n";
+        std::cout<< "newposDir:"<<newPoint1.x<<"," << newPoint1.y<<"," <<newPoint1.z <<","<<newPoint1.w <<"\n";
+        std::cout<< "forward:"<<opponnent1forward.x<<"," << opponnent1forward.y<<"," <<opponnent1forward.z <<","<<opponnent1forward.w <<"\n";
+        std::cout<< "dotProd:"<<dotprod<<"\n";;
+        std::cout<< "angle1:"<<angle1<<"\n";
+        
+        opponnent1forward=normalize(newPoint1);
+        modelOponnent1 =Matrix_Translate(opponnent1pos.x,opponnent1pos.y,opponnent1pos.z)*Matrix_Rotate_Y(-angle1)*Matrix_Translate(-opponnent1pos.x,-opponnent1pos.y,-opponnent1pos.z)*modelOponnent1;
+        modelOponnent1 =Matrix_Translate(newPoint1.x, newPoint1.y, newPoint1.z)* modelOponnent1;
+        opponnent1pos = Matrix_Translate(newPoint1.x, newPoint1.y, newPoint1.z)*opponnent1pos;
 
+        oldBezier1=BezierPoint1;
 
-        //oponnent 1
         glUniformMatrix4fv(model_uniform, 1 , GL_FALSE , glm::value_ptr(modelOponnent1));
         glUniform1i(object_id_uniform, BLUE_FALCON);
         DrawVirtualObject("falcon");
+
+
         //oponnent 2
+      
+        modelOponnent2 = Matrix_Identity();
+        modelOponnent2 = Matrix_Scale(0.01f,0.01f,0.01f);
+        modelOponnent2 = Matrix_Translate(opponnent1pos.x+opponnent1forward.x*2,opponnent1pos.y+opponnent1forward.y*2,opponnent1pos.z+opponnent1forward.z*2)*modelOponnent2;
+
         glUniformMatrix4fv(model_uniform, 1 , GL_FALSE , glm::value_ptr(modelOponnent2));
         glUniform1i(object_id_uniform, BLUE_FALCON);
         DrawVirtualObject("falcon");
-
 
         // Desenhamos o plano do chão
         model = Matrix_Translate(0.0f,-1.1f,0.0f);
