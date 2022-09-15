@@ -47,6 +47,7 @@
 // Headers locais, definidos na pasta "include/"
 #include "utils.h"
 #include "matrices.h"
+#include "bezier.h"
 
 // Estrutura que representa um modelo geométrico carregado a partir de um
 // arquivo ".obj". Veja https://en.wikipedia.org/wiki/Wavefront_.obj_file .
@@ -285,9 +286,9 @@ int main(int argc, char* argv[])
     ComputeNormals(&spheremodel);
     BuildTrianglesAndAddToVirtualScene(&spheremodel);
 
-    ObjModel bunnymodel("../../data/BlueFalcon.obj");
-    ComputeNormals(&bunnymodel);
-    BuildTrianglesAndAddToVirtualScene(&bunnymodel);
+    ObjModel carmodel("../../data/BlueFalcon.obj");
+    ComputeNormals(&carmodel);
+    BuildTrianglesAndAddToVirtualScene(&carmodel);
 
     ObjModel planemodel("../../data/plane.obj");
     ComputeNormals(&planemodel);
@@ -313,11 +314,31 @@ int main(int argc, char* argv[])
     float delta_t = 0.0f;
     glm::vec4 carPos=glm::vec4(0.0f, 0.0f, 0.0f, 1.0f);
     glm::vec4 carForward=glm::vec4(1.0f, 0.0f, 0.0f, 0.0f);
-    glm::mat4 modelCube;
-    modelCube = Matrix_Identity();
-    modelCube = Matrix_Translate(carPos.x,carPos.y,carPos.z)*modelCube;
-    modelCube = Matrix_Scale(0.1,0.1,0.1)*modelCube;
-    modelCube = Matrix_Rotate_Y(3.141592/2)*modelCube;
+    glm::mat4 modelPlayer;
+    modelPlayer = Matrix_Identity();
+    modelPlayer = Matrix_Translate(carPos.x,carPos.y,carPos.z)*modelPlayer;
+    modelPlayer = Matrix_Scale(0.1,0.1,0.1)*modelPlayer;
+    modelPlayer = Matrix_Rotate_Y(3.141592/2)*modelPlayer;
+
+    glm::mat4 modelOponnent1;
+    modelOponnent1 = Matrix_Identity();
+    modelOponnent1 = Matrix_Translate(carPos.x,carPos.y,carPos.z)*modelOponnent1;
+    modelOponnent1 = Matrix_Scale(0.1,0.1,0.1)*modelOponnent1;
+    modelOponnent1 = Matrix_Rotate_Y(3.141592/2)*modelOponnent1;
+
+    glm::mat4 modelOponnent2;
+    modelOponnent2 = Matrix_Identity();
+    modelOponnent2 = Matrix_Translate(carPos.x,carPos.y,carPos.z)*modelOponnent2;
+    modelOponnent2 = Matrix_Scale(0.1,0.1,0.1)*modelOponnent2;
+    modelOponnent2 = Matrix_Rotate_Y(3.141592/2)*modelOponnent2;
+
+
+    std::vector<glm::vec4> controlPoints;
+    //gera uma curvar aleatoria, com valores xyz dos pontos de controle entre  -1 a 1]
+
+    for(int i = 0 ;i<5; i++){
+        controlPoints.push_back(glm::vec4((float)((rand() % 2000)-1000)/(float)1000 , (float)((rand() % 2000)-1000)/(float)1000, (float)((rand() % 2000)-1000)/(float)1000, 1.0f));
+    }
     // Ficamos em loop, renderizando, até que o usuário feche a janela
     while (!glfwWindowShouldClose(window))
     {
@@ -357,7 +378,7 @@ int main(int argc, char* argv[])
         glm::vec4 camera_position_c  = glm::vec4(x,y,z,1.0f);
         glm::vec4 camera_lookat_l    = glm::vec4(0.0f,0.0f,0.0f,1.0f); // Ponto "l", para onde a câmera (look-at) estará sempre olhando
         //glm::vec4 camera_view_vector = carForward; // Vetor "view", sentido para onde a câmera está virada
-        glm::vec4 camera_view_vector = camera_lookat_l - camera_position_c; 
+        glm::vec4 camera_view_vector = camera_lookat_l - camera_position_c;
         glm::vec4 camera_up_vector   = glm::vec4(0.0f,1.0f,0.0f,0.0f); // Vetor "up" fixado para apontar para o "céu" (eito Y global)
 
         // Computamos a matriz "View" utilizando os parâmetros da câmera para
@@ -392,7 +413,7 @@ int main(int argc, char* argv[])
             float l = -r;
             projection = Matrix_Orthographic(l, r, b, t, nearplane, farplane);
         }
-        
+
         glm::mat4 model = Matrix_Identity(); // Transformação identidade de modelagem
 
         // Enviamos as matrizes "view" e "projection" para a placa de vídeo
@@ -402,23 +423,23 @@ int main(int argc, char* argv[])
         glUniformMatrix4fv(projection_uniform , 1 , GL_FALSE , glm::value_ptr(projection));
 
         #define SPHERE 0
-        #define BUNNY  1
+        #define BLUE_FALCON  1
         #define PLANE  2
 
-       
+
          if (wPressed)
         {
             glm::vec4 currentPos=carPos;
             carPos+=carForward*speed*delta_t;
             glm::vec4 nextPos=carPos-currentPos;
-            modelCube = Matrix_Translate(nextPos.x, nextPos.y, nextPos.z)*modelCube;
+            modelPlayer = Matrix_Translate(nextPos.x, nextPos.y, nextPos.z)*modelPlayer;
             //c += -w * speed * delta_t;
         }
         if (aPressed)
         {
             carForward=Matrix_Rotate_Y(0.5*delta_t)*carForward;
-            modelCube=Matrix_Translate(carPos.x,carPos.y,carPos.z)*Matrix_Rotate_Y(0.5*delta_t)*Matrix_Translate(-carPos.x,-carPos.y,-carPos.z)*modelCube;
-            
+            modelPlayer=Matrix_Translate(carPos.x,carPos.y,carPos.z)*Matrix_Rotate_Y(0.5*delta_t)*Matrix_Translate(-carPos.x,-carPos.y,-carPos.z)*modelPlayer;
+
             //c += u * speed * delta_t;
         }
 
@@ -427,14 +448,14 @@ int main(int argc, char* argv[])
             glm::vec4 currentPos=carPos;
             carPos-=carForward*speed*delta_t;
             glm::vec4 nextPos=carPos-currentPos;
-            modelCube = Matrix_Translate(nextPos.x, nextPos.y, nextPos.z)*modelCube;
+            modelPlayer = Matrix_Translate(nextPos.x, nextPos.y, nextPos.z)*modelPlayer;
 
             //c += w * speed * delta_t;
         }
         if (dPressed)
         {
             carForward=Matrix_Rotate_Y(-0.5*delta_t)*carForward;
-            modelCube=Matrix_Translate(carPos.x,carPos.y,carPos.z)*Matrix_Rotate_Y(-0.5*delta_t)*Matrix_Translate(-carPos.x,-carPos.y,-carPos.z)*modelCube;            //c += -u * speed * delta_t;
+            modelPlayer=Matrix_Translate(carPos.x,carPos.y,carPos.z)*Matrix_Rotate_Y(-0.5*delta_t)*Matrix_Translate(-carPos.x,-carPos.y,-carPos.z)*modelPlayer;            //c += -u * speed * delta_t;
         }
         if (shiftPressed)
         {
@@ -444,10 +465,22 @@ int main(int argc, char* argv[])
         {
             //c += crossproduct(w, u) / norm(crossproduct(w, u)) * speed * delta_t;
         }
-        // Desenhamos o modelo do coelho
-        glUniformMatrix4fv(model_uniform, 1 , GL_FALSE , glm::value_ptr(modelCube));
-        glUniform1i(object_id_uniform, BUNNY);
+
+        glUniformMatrix4fv(model_uniform, 1 , GL_FALSE , glm::value_ptr(modelPlayer));
+        glUniform1i(object_id_uniform, BLUE_FALCON);
         DrawVirtualObject("falcon");
+        
+
+
+        //oponnent 1
+        glUniformMatrix4fv(model_uniform, 1 , GL_FALSE , glm::value_ptr(modelOponnent1));
+        glUniform1i(object_id_uniform, BLUE_FALCON);
+        DrawVirtualObject("falcon");
+        //oponnent 2
+        glUniformMatrix4fv(model_uniform, 1 , GL_FALSE , glm::value_ptr(modelOponnent2));
+        glUniform1i(object_id_uniform, BLUE_FALCON);
+        DrawVirtualObject("falcon");
+
 
         // Desenhamos o plano do chão
         model = Matrix_Translate(0.0f,-1.1f,0.0f);
