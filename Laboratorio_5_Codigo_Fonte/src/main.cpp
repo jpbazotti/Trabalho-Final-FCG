@@ -298,7 +298,6 @@ int main(int argc, char* argv[])
     float max_velocity = 1.0;
     float friction = 0.5;
     glm::vec4 current_velocity = glm::vec4(0.0f, 0.0f, 0.0f, 0.0f);
-    glm::vec4 no_movement_acceleration = glm::vec4(0.0f, 0.0f, 0.0f, 0.0f);
     glm::vec4 acceleration = glm::vec4(0.0f, 0.0f, 0.0f, 0.0f);
 
     glm::vec4 frame_movement = glm::vec4(0.0f, 0.0f, 0.0f, 0.0f);
@@ -438,19 +437,7 @@ int main(int argc, char* argv[])
             raceStart=true;
         }
 
-        no_movement_acceleration = current_velocity*-friction;
-
-        std::cout << "no_movement_acceleration " << no_movement_acceleration.x << " " << no_movement_acceleration.y << " " << no_movement_acceleration.z << " " << no_movement_acceleration.w << "\n";
-        std::cout << "carForward " << carForward.x << " " << carForward.y << " " << carForward.z << " " << carForward.w << "\n";
-
-        if(norm(no_movement_acceleration) != 0){
-            std::cout << "k\n";
-            if(acos(dotproduct(normalize(no_movement_acceleration), normalize(carForward))) > PI/2){
-                std::cout << "k2\n";
-                no_movement_acceleration = current_velocity*friction;
-            }
-        }
-        acceleration = no_movement_acceleration*delta_t;
+        current_velocity = friction*current_velocity;
 
         if (wPressed)
         {
@@ -486,6 +473,10 @@ int main(int argc, char* argv[])
             //c += -u * speed * delta_t;
         }
 
+        if(!wPressed && !aPressed && !sPressed && !dPressed && norm(current_velocity) < 0.1){
+            current_velocity *= 0;
+        }
+
         current_velocity = norm(current_velocity)*carForward + acceleration;
         frame_movement = current_velocity*delta_t;
         modelPlayer = Matrix_Translate(frame_movement.x, frame_movement.y, frame_movement.z)*modelPlayer;
@@ -494,6 +485,8 @@ int main(int argc, char* argv[])
         std::cout << "acceleration " << acceleration.x << " " << acceleration.y << " " << acceleration.z << "\n";
         std::cout << "current_velocity " << current_velocity.x << " " << current_velocity.y << " " << current_velocity.z << "\n";
         std::cout << "frame_movement " << frame_movement.x << " " << frame_movement.y << " " << frame_movement.z << "\n";
+
+        acceleration *= 0;
 
         glUniformMatrix4fv(model_uniform, 1 , GL_FALSE , glm::value_ptr(modelPlayer));
         glUniform1i(object_id_uniform, BLUE_FALCON);
