@@ -303,6 +303,11 @@ int main(int argc, char* argv[])
     modelPlayer = Matrix_Scale(0.1,0.1,0.1)*modelPlayer;
     modelPlayer = Matrix_Rotate_Y(3.141592/2)*modelPlayer;
 
+    float max_velocity = 1.0;
+    float friction = 0.2;
+    glm::vec4 current_velocity = glm::vec4(0.0f, 0.0f, 0.0f, 0.0f);
+    glm::vec4 no_movement_acceleration = glm::vec4(0.0f, 0.0f, 0.0f, 0.0f);
+    glm::vec4 acceleration = glm::vec4(0.0f, 0.0f, 0.0f, 0.0f);
 
     glm::vec4 oldPos1 = glm::vec4(0.0f, 0.0f, 1.0f, 1.0f);
     glm::vec4 oldPos2 = glm::vec4(0.0f, 0.0f, -1.0f, 1.0f);
@@ -439,13 +444,17 @@ int main(int argc, char* argv[])
             raceStart=true;
         }
 
-         if (wPressed)
+        no_movement_acceleration = current_velocity*-friction;
+        acceleration = no_movement_acceleration;
+
+        if (wPressed)
         {
+            acceleration = Matrix_Translate(max_velocity*carForward.x, max_velocity*carForward.y, max_velocity*carForward.z)*no_movement_acceleration*delta_t;
+            current_velocity = current_velocity + acceleration;
             glm::vec4 currentPos=carPos;
-            carPos+=carForward*speed*delta_t;
+            carPos+=carForward*current_velocity;
             glm::vec4 nextPos=carPos-currentPos;
             modelPlayer = Matrix_Translate(nextPos.x, nextPos.y, nextPos.z)*modelPlayer;
-            //c += -w * speed * delta_t;
         }
         if (aPressed)
         {
@@ -457,12 +466,12 @@ int main(int argc, char* argv[])
 
         if (sPressed)
         {
+            acceleration = Matrix_Translate(max_velocity*-carForward.x, max_velocity*-carForward.y, max_velocity*-carForward.z)*no_movement_acceleration*delta_t;
+            current_velocity = current_velocity + acceleration;
             glm::vec4 currentPos=carPos;
-            carPos-=carForward*speed*delta_t;
+            carPos+=carForward*current_velocity;
             glm::vec4 nextPos=carPos-currentPos;
             modelPlayer = Matrix_Translate(nextPos.x, nextPos.y, nextPos.z)*modelPlayer;
-
-            //c += w * speed * delta_t;
         }
         if (dPressed)
         {
