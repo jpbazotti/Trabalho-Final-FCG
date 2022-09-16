@@ -448,6 +448,11 @@ int main(int argc, char* argv[])
             carPos+=carForward*current_velocity;
             glm::vec4 nextPos=carPos-currentPos;
             modelPlayer = Matrix_Translate(nextPos.x, nextPos.y, nextPos.z)*modelPlayer;
+            std::cout << "acceleration " << acceleration.x << " " << acceleration.y << " " << acceleration.z << "\n";
+            std::cout << "current_velocity " << current_velocity.x << " " << current_velocity.y << " " << current_velocity.z << "\n";
+            std::cout << "carPos " << carPos.x << " " << carPos.y << " " << carPos.z << "\n";
+            std::cout << "currentPos " << currentPos.x << " " << currentPos.y << " " << currentPos.z << "\n";
+            std::cout << "nextPos " << nextPos.x << " " << nextPos.y << " " << nextPos.z << "\n";
         }
         if (aPressed)
         {
