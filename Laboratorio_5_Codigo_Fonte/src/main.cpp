@@ -297,10 +297,12 @@ int main(int argc, char* argv[])
     modelPlayer = Matrix_Rotate_Y(3.141592/2)*modelPlayer;
 
     float max_velocity = 1.0;
-    float friction = 0.2;
+    float friction = 0.5;
     glm::vec4 current_velocity = glm::vec4(0.0f, 0.0f, 0.0f, 0.0f);
     glm::vec4 no_movement_acceleration = glm::vec4(0.0f, 0.0f, 0.0f, 0.0f);
     glm::vec4 acceleration = glm::vec4(0.0f, 0.0f, 0.0f, 0.0f);
+
+    glm::vec4 frame_movement = glm::vec4(0.0f, 0.0f, 0.0f, 0.0f);
 
     glm::vec4 oldPos1 = glm::vec4(0.0f, 0.16f, 1.0f, 1.0f);
     glm::vec4 oldPos2 = glm::vec4(0.0f, 0.16f, -1.0f, 1.0f);
@@ -438,47 +440,61 @@ int main(int argc, char* argv[])
         }
 
         no_movement_acceleration = current_velocity*-friction;
-        acceleration = no_movement_acceleration;
+
+        std::cout << "no_movement_acceleration " << no_movement_acceleration.x << " " << no_movement_acceleration.y << " " << no_movement_acceleration.z << " " << no_movement_acceleration.w << "\n";
+        std::cout << "carForward " << carForward.x << " " << carForward.y << " " << carForward.z << " " << carForward.w << "\n";
+
+        if(norm(no_movement_acceleration) != 0){
+            std::cout << "k\n";
+            if(acos(dotproduct(normalize(no_movement_acceleration), normalize(carForward))) > PI/2){
+                std::cout << "k2\n";
+                no_movement_acceleration = current_velocity*friction;
+            }
+        }
+        acceleration = no_movement_acceleration*delta_t;
 
         if (wPressed)
         {
-            acceleration = no_movement_acceleration*delta_t;
-            acceleration += max_velocity*carForward;
-            current_velocity = current_velocity + acceleration;
-            glm::vec4 currentPos=carPos;
-            carPos+=carForward*current_velocity;
-            glm::vec4 nextPos=carPos-currentPos;
-            modelPlayer = Matrix_Translate(nextPos.x, nextPos.y, nextPos.z)*modelPlayer;
-            std::cout << "acceleration " << acceleration.x << " " << acceleration.y << " " << acceleration.z << "\n";
-            std::cout << "current_velocity " << current_velocity.x << " " << current_velocity.y << " " << current_velocity.z << "\n";
-            std::cout << "carPos " << carPos.x << " " << carPos.y << " " << carPos.z << "\n";
-            std::cout << "currentPos " << currentPos.x << " " << currentPos.y << " " << currentPos.z << "\n";
-            std::cout << "nextPos " << nextPos.x << " " << nextPos.y << " " << nextPos.z << "\n";
+            acceleration += max_velocity*carForward*delta_t;
         }
         if (aPressed)
         {
-            carForward=Matrix_Rotate_Y(0.5*delta_t)*carForward;
-            modelPlayer=Matrix_Translate(carPos.x,carPos.y,carPos.z)*Matrix_Rotate_Y(0.5*delta_t)*Matrix_Translate(-carPos.x,-carPos.y,-carPos.z)*modelPlayer;
-
+            float velocity_norm = norm(current_velocity);
+            float rotation = 2.0f;
+            if(velocity_norm > 0){
+                rotation = std::min(std::max(max_velocity/norm(current_velocity), 0.5f), 2.0f);
+            }
+            carForward=Matrix_Rotate_Y(rotation*delta_t)*carForward;
+            modelPlayer=Matrix_Translate(carPos.x,carPos.y,carPos.z)*Matrix_Rotate_Y(rotation*delta_t)*Matrix_Translate(-carPos.x,-carPos.y,-carPos.z)*modelPlayer;
+            
             //c += u * speed * delta_t;
         }
 
         if (sPressed)
         {
-            acceleration = no_movement_acceleration*delta_t;
-            acceleration -= max_velocity*carForward;
-            current_velocity = current_velocity + acceleration;
-            glm::vec4 currentPos=carPos;
-            carPos+=carForward*current_velocity;
-            glm::vec4 nextPos=carPos-currentPos;
-            modelPlayer = Matrix_Translate(nextPos.x, nextPos.y, nextPos.z)*modelPlayer;
+            acceleration -= max_velocity*carForward*delta_t;
         }
         if (dPressed)
         {
-            carForward=Matrix_Rotate_Y(-0.5*delta_t)*carForward;
-            modelPlayer=Matrix_Translate(carPos.x,carPos.y,carPos.z)*Matrix_Rotate_Y(-0.5*delta_t)*Matrix_Translate(-carPos.x,-carPos.y,-carPos.z)*modelPlayer;            //c += -u * speed * delta_t;
+            float velocity_norm = norm(current_velocity);
+            float rotation = 2.0f;
+            if(velocity_norm > 0){
+                rotation = std::min(std::max(max_velocity/norm(current_velocity), 0.5f), 2.0f);
+            }
+            carForward=Matrix_Rotate_Y(-rotation*delta_t)*carForward;
+            modelPlayer=Matrix_Translate(carPos.x,carPos.y,carPos.z)*Matrix_Rotate_Y(-rotation*delta_t)*Matrix_Translate(-carPos.x,-carPos.y,-carPos.z)*modelPlayer;
+            
+            //c += -u * speed * delta_t;
         }
 
+        current_velocity = norm(current_velocity)*carForward + acceleration;
+        frame_movement = current_velocity*delta_t;
+        modelPlayer = Matrix_Translate(frame_movement.x, frame_movement.y, frame_movement.z)*modelPlayer;
+        carPos += frame_movement;
+
+        std::cout << "acceleration " << acceleration.x << " " << acceleration.y << " " << acceleration.z << "\n";
+        std::cout << "current_velocity " << current_velocity.x << " " << current_velocity.y << " " << current_velocity.z << "\n";
+        std::cout << "frame_movement " << frame_movement.x << " " << frame_movement.y << " " << frame_movement.z << "\n";
 
         glUniformMatrix4fv(model_uniform, 1 , GL_FALSE , glm::value_ptr(modelPlayer));
         glUniform1i(object_id_uniform, BLUE_FALCON);
