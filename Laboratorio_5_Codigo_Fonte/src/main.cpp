@@ -146,8 +146,6 @@ bool wPressed = false;
 bool aPressed = false;
 bool sPressed = false;
 bool dPressed = false;
-bool shiftPressed = false;
-bool ctrlPressed = false;
 float speed = 1.0f;
 glm::vec4 c = glm::vec4(0.0f, 0.0f, 3.0f, 1.0f);
 glm::vec4 origin = glm::vec4(0.0f, 0.0f, 0.0f, 1.0f);
@@ -159,19 +157,10 @@ float g_CameraTheta = 0.0f; // Ângulo no plano ZX em relação ao eixo Z
 float g_CameraPhi = 0.0f;   // Ângulo em relação ao eixo Y
 float g_CameraDistance = 3.5f; // Distância da câmera para a origem
 
-// Variáveis que controlam rotação do antebraço
-float g_ForearmAngleZ = 0.0f;
-float g_ForearmAngleX = 0.0f;
-
-// Variáveis que controlam translação do torso
-float g_TorsoPositionX = 0.0f;
-float g_TorsoPositionY = 0.0f;
-
 // Variável que controla o tipo de projeção utilizada: perspectiva ou ortográfica.
 bool g_UsePerspectiveProjection = true;
 
 // Variável que controla se o texto informativo será mostrado na tela.
-bool g_ShowInfoText = true;
 
 // Variáveis que definem um programa de GPU (shaders). Veja função LoadShadersFromFiles().
 GLuint vertex_shader_id;
@@ -269,9 +258,13 @@ int main(int argc, char* argv[])
     ComputeNormals(&spheremodel);
     BuildTrianglesAndAddToVirtualScene(&spheremodel);
 
-    ObjModel carmodel("../../data/BlueFalcon.obj");
+    ObjModel carmodel("../../data/Nave_1_FBX_v1.obj");
     ComputeNormals(&carmodel);
     BuildTrianglesAndAddToVirtualScene(&carmodel);
+
+    ObjModel playermodel("../../data/blue_falcon.obj");
+    ComputeNormals(&playermodel);
+    BuildTrianglesAndAddToVirtualScene(&playermodel);
 
     ObjModel planemodel("../../data/plane.obj");
     ComputeNormals(&planemodel);
@@ -300,7 +293,7 @@ int main(int argc, char* argv[])
     glm::mat4 modelPlayer;
     modelPlayer = Matrix_Identity();
     modelPlayer = Matrix_Translate(carPos.x,carPos.y,carPos.z)*modelPlayer;
-    modelPlayer = Matrix_Scale(0.1,0.1,0.1)*modelPlayer;
+    //modelPlayer = Matrix_Scale(0.003,0.003,0.003)*modelPlayer;
     modelPlayer = Matrix_Rotate_Y(3.141592/2)*modelPlayer;
 
     float max_velocity = 1.0;
@@ -309,12 +302,12 @@ int main(int argc, char* argv[])
     glm::vec4 no_movement_acceleration = glm::vec4(0.0f, 0.0f, 0.0f, 0.0f);
     glm::vec4 acceleration = glm::vec4(0.0f, 0.0f, 0.0f, 0.0f);
 
-    glm::vec4 oldPos1 = glm::vec4(0.0f, 0.0f, 1.0f, 1.0f);
-    glm::vec4 oldPos2 = glm::vec4(0.0f, 0.0f, -1.0f, 1.0f);
+    glm::vec4 oldPos1 = glm::vec4(0.0f, 0.16f, 1.0f, 1.0f);
+    glm::vec4 oldPos2 = glm::vec4(0.0f, 0.16f, -1.0f, 1.0f);
 
     glm::mat4 modelOponnent1;
     modelOponnent1 = Matrix_Identity();
-    modelOponnent1 = Matrix_Scale(0.1,0.1,0.1)*modelOponnent1;
+    modelOponnent1 = Matrix_Scale(0.0012,0.0012,0.0012)*modelOponnent1;
     modelOponnent1 = Matrix_Rotate_Y(3.141592/2)*modelOponnent1;
     modelOponnent1 = Matrix_Translate(oldPos1.x,oldPos1.y,oldPos1.z)*modelOponnent1;
     glm::vec4 opponnent1forward=glm::vec4(1.0f, 0.0f, 0.0f, 0.0f);
@@ -322,7 +315,7 @@ int main(int argc, char* argv[])
 
     glm::mat4 modelOponnent2;
     modelOponnent2 = Matrix_Identity();
-    modelOponnent2 = Matrix_Scale(0.1,0.1,0.1)*modelOponnent2;
+    modelOponnent2 = Matrix_Scale(0.0012,0.0012,0.0012)*modelOponnent2;
     modelOponnent2 = Matrix_Rotate_Y(3.141592/2)*modelOponnent2;
     modelOponnent2 = Matrix_Translate(oldPos2.x,oldPos2.y,oldPos2.z)*modelOponnent2;
     glm::vec4 opponnent2forward=glm::vec4(1.0f, 0.0f, 0.0f, 0.0f);
@@ -331,27 +324,27 @@ int main(int argc, char* argv[])
 
     std::vector<glm::vec4> controlPoints1_1;
     controlPoints1_1.push_back(oldPos1);
-    controlPoints1_1.push_back(glm::vec4(30.0f, 0.0f, 1.6f, 1.0f));
-    controlPoints1_1.push_back(glm::vec4(30.0f, 0.0f, 3.3f, 1.0f));
-    controlPoints1_1.push_back(glm::vec4(0.0f, 0.0f, 5.0f, 1.0f));
+    controlPoints1_1.push_back(glm::vec4(30.0f, 0.16f, 1.6f, 1.0f));
+    controlPoints1_1.push_back(glm::vec4(30.0f, 0.16f, 3.3f, 1.0f));
+    controlPoints1_1.push_back(glm::vec4(0.0f, 0.16f, 5.0f, 1.0f));
 
     std::vector<glm::vec4> controlPoints1_2;
-    controlPoints1_2.push_back(glm::vec4(0.0f, 0.0f, 5.0f, 1.0f));
-    controlPoints1_2.push_back(glm::vec4(-20.0f, 0.0f, 3.3f, 1.0f));
-    controlPoints1_2.push_back(glm::vec4(-20.0f, 0.0f, 1.6f, 1.0f));
-    controlPoints1_2.push_back(glm::vec4(0.0f, 0.0f, 1.0f, 1.0f));
+    controlPoints1_2.push_back(glm::vec4(0.0f, 0.16f, 5.0f, 1.0f));
+    controlPoints1_2.push_back(glm::vec4(-20.0f, 0.16f, 3.3f, 1.0f));
+    controlPoints1_2.push_back(glm::vec4(-20.0f, 0.16f, 1.6f, 1.0f));
+    controlPoints1_2.push_back(glm::vec4(0.0f, 0.16f, 1.0f, 1.0f));
 
     std::vector<glm::vec4> controlPoints2_1;
     controlPoints2_1.push_back(oldPos2);
-    controlPoints2_1.push_back(glm::vec4(30.0f, 0.0f, -1.6f, 1.0f));
-    controlPoints2_1.push_back(glm::vec4(30.0f, 0.0f, -3.3f, 1.0f));
-    controlPoints2_1.push_back(glm::vec4(0.0f, 0.0f, -5.0f, 1.0f));
+    controlPoints2_1.push_back(glm::vec4(30.0f, 0.16f, -1.6f, 1.0f));
+    controlPoints2_1.push_back(glm::vec4(30.0f, 0.65f, -3.3f, 1.0f));
+    controlPoints2_1.push_back(glm::vec4(0.0f, 0.16f, -5.0f, 1.0f));
 
     std::vector<glm::vec4> controlPoints2_2;
-    controlPoints2_2.push_back(glm::vec4(0.0f, 0.0f, -5.0f, 1.0f));
-    controlPoints2_2.push_back(glm::vec4(-20.0f, 0.0f, -3.3f, 1.0f));
-    controlPoints2_2.push_back(glm::vec4(-20.0f, 0.0f, -1.6f, 1.0f));
-    controlPoints2_2.push_back(glm::vec4(0.0f, 0.0f, -1.0f, 1.0f));
+    controlPoints2_2.push_back(glm::vec4(0.0f, 0.16f, -5.0f, 1.0f));
+    controlPoints2_2.push_back(glm::vec4(-20.0f, 0.16f, -3.3f, 1.0f));
+    controlPoints2_2.push_back(glm::vec4(-20.0f, 0.16f, -1.6f, 1.0f));
+    controlPoints2_2.push_back(glm::vec4(0.0f, 0.16f, -1.0f, 1.0f));
 
     bool raceStart=false;
     while (!glfwWindowShouldClose(window))
@@ -478,28 +471,56 @@ int main(int argc, char* argv[])
             carForward=Matrix_Rotate_Y(-0.5*delta_t)*carForward;
             modelPlayer=Matrix_Translate(carPos.x,carPos.y,carPos.z)*Matrix_Rotate_Y(-0.5*delta_t)*Matrix_Translate(-carPos.x,-carPos.y,-carPos.z)*modelPlayer;            //c += -u * speed * delta_t;
         }
-        if (shiftPressed)
-        {
-            //c += -crossproduct(w, u) / norm(crossproduct(w, u)) * speed * delta_t;
-        }
-        if (ctrlPressed)
-        {
-            //c += crossproduct(w, u) / norm(crossproduct(w, u)) * speed * delta_t;
-        }
+
 
         glUniformMatrix4fv(model_uniform, 1 , GL_FALSE , glm::value_ptr(modelPlayer));
         glUniform1i(object_id_uniform, BLUE_FALCON);
-        DrawVirtualObject("falcon");
+        DrawVirtualObject("Mesh1");
+        DrawVirtualObject("Mesh2");
+        DrawVirtualObject("Mesh3");
+        DrawVirtualObject("Mesh4");
+        DrawVirtualObject("Mesh5");
+        DrawVirtualObject("Mesh6");
+        DrawVirtualObject("Mesh7");
+        DrawVirtualObject("Mesh8");
+        DrawVirtualObject("Mesh9");
+        DrawVirtualObject("Mesh10");
+        DrawVirtualObject("Mesh11");
+        DrawVirtualObject("Mesh12");
+        DrawVirtualObject("Mesh13");
+        DrawVirtualObject("Mesh14");
+        DrawVirtualObject("Mesh15");
+        DrawVirtualObject("Mesh16");
+        DrawVirtualObject("Mesh17");
+        DrawVirtualObject("Mesh18");
+        DrawVirtualObject("Mesh19");
+        DrawVirtualObject("Mesh20");
+        DrawVirtualObject("Mesh21");
+        DrawVirtualObject("Mesh22");
+        DrawVirtualObject("Mesh23");
+        DrawVirtualObject("Mesh24");
+        DrawVirtualObject("Mesh25");
+        DrawVirtualObject("Mesh26");
+        DrawVirtualObject("Mesh27");
+        DrawVirtualObject("Mesh28");
+        DrawVirtualObject("Mesh29");
+        DrawVirtualObject("Mesh30");
+        DrawVirtualObject("Mesh31");
+        DrawVirtualObject("Mesh32");
+        DrawVirtualObject("Mesh33");
+        DrawVirtualObject("Mesh34");
+        DrawVirtualObject("Mesh35");
+        DrawVirtualObject("Mesh36");
+        DrawVirtualObject("Mesh37");
 
         float bezierTime =current_time/2;
-        std::cout << bezierTime <<"\n";
          //oponnent 1
 
 
         modelOponnent1=opponentMovement(modelOponnent1,bezierTime,controlPoints1_1,controlPoints1_2,3,opponnent1forward,opponnent1pos,oldPos1);
         glUniformMatrix4fv(model_uniform, 1 , GL_FALSE , glm::value_ptr(modelOponnent1));
         glUniform1i(object_id_uniform, BLUE_FALCON);
-        DrawVirtualObject("falcon");
+        DrawVirtualObject("Nave1_High");
 
 
         //oponnent 2
@@ -507,7 +528,7 @@ int main(int argc, char* argv[])
         modelOponnent2=opponentMovement(modelOponnent2,bezierTime,controlPoints2_1,controlPoints2_2,3,opponnent2forward,opponnent2pos,oldPos2);
         glUniformMatrix4fv(model_uniform, 1 , GL_FALSE , glm::value_ptr(modelOponnent2));
         glUniform1i(object_id_uniform, BLUE_FALCON);
-        DrawVirtualObject("falcon");
+        DrawVirtualObject("Nave1_High");
 
         // Desenhamos o plano do chão
         model = Matrix_Translate(0.0f,-1.1f,0.0f);
@@ -517,14 +538,14 @@ int main(int argc, char* argv[])
 
         // Imprimimos na tela os ângulos de Euler que controlam a rotação do
         // terceiro cubo.
-        TextRendering_ShowEulerAngles(window, g_ShowInfoText, g_AngleZ, g_AngleY, g_AngleX);
+        //TextRendering_ShowEulerAngles(window, g_ShowInfoText, g_AngleZ, g_AngleY, g_AngleX);
 
         // Imprimimos na informação sobre a matriz de projeção sendo utilizada.
-        TextRendering_ShowProjection(window, g_ShowInfoText, g_UsePerspectiveProjection);
+       // TextRendering_ShowProjection(window, g_ShowInfoText, g_UsePerspectiveProjection);
 
         // Imprimimos na tela informação sobre o número de quadros renderizados
         // por segundo (frames per second).
-        TextRendering_ShowFramesPerSecond(window, g_ShowInfoText);
+        //TextRendering_ShowFramesPerSecond(window, g_ShowInfoText);
 
         // O framebuffer onde OpenGL executa as operações de renderização não
         // é o mesmo que está sendo mostrado para o usuário, caso contrário
@@ -1175,38 +1196,6 @@ void CursorPosCallback(GLFWwindow* window, double xpos, double ypos)
         g_LastCursorPosX = xpos;
         g_LastCursorPosY = ypos;
     }
-
-    if (g_RightMouseButtonPressed)
-    {
-        // Deslocamento do cursor do mouse em x e y de coordenadas de tela!
-        float dx = xpos - g_LastCursorPosX;
-        float dy = ypos - g_LastCursorPosY;
-
-        // Atualizamos parâmetros da antebraço com os deslocamentos
-        g_ForearmAngleZ -= 0.01f*dx;
-        g_ForearmAngleX += 0.01f*dy;
-
-        // Atualizamos as variáveis globais para armazenar a posição atual do
-        // cursor como sendo a última posição conhecida do cursor.
-        g_LastCursorPosX = xpos;
-        g_LastCursorPosY = ypos;
-    }
-
-    if (g_MiddleMouseButtonPressed)
-    {
-        // Deslocamento do cursor do mouse em x e y de coordenadas de tela!
-        float dx = xpos - g_LastCursorPosX;
-        float dy = ypos - g_LastCursorPosY;
-
-        // Atualizamos parâmetros da antebraço com os deslocamentos
-        g_TorsoPositionX += 0.01f*dx;
-        g_TorsoPositionY -= 0.01f*dy;
-
-        // Atualizamos as variáveis globais para armazenar a posição atual do
-        // cursor como sendo a última posição conhecida do cursor.
-        g_LastCursorPosX = xpos;
-        g_LastCursorPosY = ypos;
-    }
 }
 
 // Função callback chamada sempre que o usuário movimenta a "rodinha" do mouse.
@@ -1242,41 +1231,6 @@ void KeyCallback(GLFWwindow* window, int key, int scancode, int action, int mod)
     if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS)
         glfwSetWindowShouldClose(window, GL_TRUE);
 
-    // O código abaixo implementa a seguinte lógica:
-    //   Se apertar tecla X       então g_AngleX += delta;
-    //   Se apertar tecla shift+X então g_AngleX -= delta;
-    //   Se apertar tecla Y       então g_AngleY += delta;
-    //   Se apertar tecla shift+Y então g_AngleY -= delta;
-    //   Se apertar tecla Z       então g_AngleZ += delta;
-    //   Se apertar tecla shift+Z então g_AngleZ -= delta;
-
-    float delta = 3.141592 / 16; // 22.5 graus, em radianos.
-
-    if (key == GLFW_KEY_X && action == GLFW_PRESS)
-    {
-        g_AngleX += (mod & GLFW_MOD_SHIFT) ? -delta : delta;
-    }
-
-    if (key == GLFW_KEY_Y && action == GLFW_PRESS)
-    {
-        g_AngleY += (mod & GLFW_MOD_SHIFT) ? -delta : delta;
-    }
-    if (key == GLFW_KEY_Z && action == GLFW_PRESS)
-    {
-        g_AngleZ += (mod & GLFW_MOD_SHIFT) ? -delta : delta;
-    }
-
-    // Se o usuário apertar a tecla espaço, resetamos os ângulos de Euler para zero.
-    if (key == GLFW_KEY_SPACE && action == GLFW_PRESS)
-    {
-        g_AngleX = 0.0f;
-        g_AngleY = 0.0f;
-        g_AngleZ = 0.0f;
-        g_ForearmAngleX = 0.0f;
-        g_ForearmAngleZ = 0.0f;
-        g_TorsoPositionX = 0.0f;
-        g_TorsoPositionY = 0.0f;
-    }
 
     // Se o usuário apertar a tecla P, utilizamos projeção perspectiva.
     if (key == GLFW_KEY_P && action == GLFW_PRESS)
@@ -1290,11 +1244,7 @@ void KeyCallback(GLFWwindow* window, int key, int scancode, int action, int mod)
         g_UsePerspectiveProjection = false;
     }
 
-    // Se o usuário apertar a tecla H, fazemos um "toggle" do texto informativo mostrado na tela.
-    if (key == GLFW_KEY_H && action == GLFW_PRESS)
-    {
-        g_ShowInfoText = !g_ShowInfoText;
-    }
+
 
     // Se o usuário apertar a tecla R, recarregamos os shaders dos arquivos "shader_fragment.glsl" e "shader_vertex.glsl".
     if (key == GLFW_KEY_R && action == GLFW_PRESS)
