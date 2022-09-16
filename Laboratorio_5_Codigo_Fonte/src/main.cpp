@@ -325,19 +325,28 @@ int main(int argc, char* argv[])
 
 
     std::vector<glm::vec4> controlPoints1_1;
-    //gera uma curvar aleatoria, com valores xyz dos pontos de controle entre  -1 a 1]
-    controlPoints1.push_back(oldPos1);
-    controlPoints1.push_back(glm::vec4(30.0f, 0.0f, 1.6f, 1.0f));
-    controlPoints1.push_back(glm::vec4(30.0f, 0.0f, 3.3f, 1.0f));
-    controlPoints1.push_back(glm::vec4(0.0f, 0.0f, 5.0f, 1.0f));
-    // Ficamos em loop, renderizando, até que o usuário feche a janela
+    controlPoints1_1.push_back(oldPos1);
+    controlPoints1_1.push_back(glm::vec4(30.0f, 0.0f, 1.6f, 1.0f));
+    controlPoints1_1.push_back(glm::vec4(30.0f, 0.0f, 3.3f, 1.0f));
+    controlPoints1_1.push_back(glm::vec4(0.0f, 0.0f, 5.0f, 1.0f));
+
+    std::vector<glm::vec4> controlPoints1_2;
+    controlPoints1_2.push_back(glm::vec4(0.0f, 0.0f, 5.0f, 1.0f));
+    controlPoints1_2.push_back(glm::vec4(-20.0f, 0.0f, 3.3f, 1.0f));
+    controlPoints1_2.push_back(glm::vec4(-20.0f, 0.0f, 1.6f, 1.0f));
+    controlPoints1_2.push_back(glm::vec4(0.0f, 0.0f, 1.0f, 1.0f));
 
     std::vector<glm::vec4> controlPoints2_1;
-    //gera uma curvar aleatoria, com valores xyz dos pontos de controle entre  -1 a 1]
-    controlPoints2.push_back(oldPos2);
-    controlPoints2.push_back(glm::vec4(30.0f, 0.0f, -1.6f, 1.0f));
-    controlPoints2.push_back(glm::vec4(30.0f, 0.0f, -3.3f, 1.0f));
-    controlPoints2.push_back(glm::vec4(0.0f, 0.0f, -5.0f, 1.0f));
+    controlPoints2_1.push_back(oldPos2);
+    controlPoints2_1.push_back(glm::vec4(30.0f, 0.0f, -1.6f, 1.0f));
+    controlPoints2_1.push_back(glm::vec4(30.0f, 0.0f, -3.3f, 1.0f));
+    controlPoints2_1.push_back(glm::vec4(0.0f, 0.0f, -5.0f, 1.0f));
+
+    std::vector<glm::vec4> controlPoints2_2;
+    controlPoints2_2.push_back(glm::vec4(0.0f, 0.0f, -5.0f, 1.0f));
+    controlPoints2_2.push_back(glm::vec4(-20.0f, 0.0f, -3.3f, 1.0f));
+    controlPoints2_2.push_back(glm::vec4(-20.0f, 0.0f, -1.6f, 1.0f));
+    controlPoints2_2.push_back(glm::vec4(0.0f, 0.0f, -1.0f, 1.0f));
 
     bool raceStart=false;
     while (!glfwWindowShouldClose(window))
@@ -477,8 +486,8 @@ int main(int argc, char* argv[])
         std::cout << bezierTime <<"\n";
          //oponnent 1
 
-       
-        modelOponnent1=opponentMovement(modelOponnent1,bezierTime,controlPoints1,3,opponnent1forward,opponnent1pos,oldPos1);
+
+        modelOponnent1=opponentMovement(modelOponnent1,bezierTime,controlPoints1_1,controlPoints1_2,3,opponnent1forward,opponnent1pos,oldPos1);
         glUniformMatrix4fv(model_uniform, 1 , GL_FALSE , glm::value_ptr(modelOponnent1));
         glUniform1i(object_id_uniform, BLUE_FALCON);
         DrawVirtualObject("falcon");
@@ -486,7 +495,7 @@ int main(int argc, char* argv[])
 
         //oponnent 2
 
-        modelOponnent2=opponentMovement(modelOponnent2,bezierTime,controlPoints2,3,opponnent2forward,opponnent2pos,oldPos2);
+        modelOponnent2=opponentMovement(modelOponnent2,bezierTime,controlPoints2_1,controlPoints2_2,3,opponnent2forward,opponnent2pos,oldPos2);
         glUniformMatrix4fv(model_uniform, 1 , GL_FALSE , glm::value_ptr(modelOponnent2));
         glUniform1i(object_id_uniform, BLUE_FALCON);
         DrawVirtualObject("falcon");
