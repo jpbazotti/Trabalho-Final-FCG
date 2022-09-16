@@ -282,10 +282,10 @@ int main(int argc, char* argv[])
     // Habilitamos o Z-buffer. Veja slides 104-116 do documento Aula_09_Projecoes.pdf.
     glEnable(GL_DEPTH_TEST);
 
-    // Habilitamos o Backface Culling. Veja slides 23-34 do documento Aula_13_Clipping_and_Culling.pdf.
-    //glEnable(GL_CULL_FACE);
-    //glCullFace(GL_BACK);
-    //glFrontFace(GL_CCW);
+    glEnable(GL_CULL_FACE);
+    glCullFace(GL_BACK);
+    glFrontFace(GL_CCW);
+
     float prev_time = (float)glfwGetTime();
     float delta_t = 0.0f;
     glm::vec4 carPos=glm::vec4(0.0f, 0.0f, 0.0f, 1.0f);
@@ -293,7 +293,6 @@ int main(int argc, char* argv[])
     glm::mat4 modelPlayer;
     modelPlayer = Matrix_Identity();
     modelPlayer = Matrix_Translate(carPos.x,carPos.y,carPos.z)*modelPlayer;
-    //modelPlayer = Matrix_Scale(0.003,0.003,0.003)*modelPlayer;
     modelPlayer = Matrix_Rotate_Y(3.141592/2)*modelPlayer;
 
     float max_velocity = 1.0;
@@ -302,6 +301,7 @@ int main(int argc, char* argv[])
     glm::vec4 no_movement_acceleration = glm::vec4(0.0f, 0.0f, 0.0f, 0.0f);
     glm::vec4 acceleration = glm::vec4(0.0f, 0.0f, 0.0f, 0.0f);
 
+    //opponent variables
     glm::vec4 oldPos1 = glm::vec4(0.0f, 0.16f, 1.0f, 1.0f);
     glm::vec4 oldPos2 = glm::vec4(0.0f, 0.16f, -1.0f, 1.0f);
 
