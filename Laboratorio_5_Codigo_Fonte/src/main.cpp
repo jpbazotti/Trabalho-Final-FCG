@@ -295,8 +295,8 @@ int main(int argc, char* argv[])
     modelPlayer = Matrix_Translate(carPos.x,carPos.y,carPos.z)*modelPlayer;
     modelPlayer = Matrix_Rotate_Y(3.141592/2)*modelPlayer;
 
-    float max_velocity = 1.0;
-    float friction = 0.5;
+    float max_velocity = 2.0;
+    float friction = 0.7;
     glm::vec4 current_velocity = glm::vec4(0.0f, 0.0f, 0.0f, 0.0f);
     glm::vec4 acceleration = glm::vec4(0.0f, 0.0f, 0.0f, 0.0f);
 
@@ -437,7 +437,7 @@ int main(int argc, char* argv[])
             raceStart=true;
         }
 
-        current_velocity = friction*current_velocity;
+        current_velocity -= friction*delta_t*current_velocity;
 
         if (wPressed)
         {
@@ -452,8 +452,6 @@ int main(int argc, char* argv[])
             }
             carForward=Matrix_Rotate_Y(rotation*delta_t)*carForward;
             modelPlayer=Matrix_Translate(carPos.x,carPos.y,carPos.z)*Matrix_Rotate_Y(rotation*delta_t)*Matrix_Translate(-carPos.x,-carPos.y,-carPos.z)*modelPlayer;
-
-            //c += u * speed * delta_t;
         }
 
         if (sPressed)
@@ -469,15 +467,19 @@ int main(int argc, char* argv[])
             }
             carForward=Matrix_Rotate_Y(-rotation*delta_t)*carForward;
             modelPlayer=Matrix_Translate(carPos.x,carPos.y,carPos.z)*Matrix_Rotate_Y(-rotation*delta_t)*Matrix_Translate(-carPos.x,-carPos.y,-carPos.z)*modelPlayer;
-
-            //c += -u * speed * delta_t;
         }
 
-        if(!wPressed && !aPressed && !sPressed && !dPressed && norm(current_velocity) < 0.1){
+        if(norm(acceleration) == 0 && norm(current_velocity) < 0.1){
             current_velocity *= 0;
         }
 
-        current_velocity = norm(current_velocity)*carForward + acceleration;
+        if(dotproduct(current_velocity, carForward) < 0){
+            current_velocity = norm(current_velocity)*-carForward + acceleration;
+        }
+        else{
+            current_velocity = norm(current_velocity)*carForward + acceleration;
+        }
+
         frame_movement = current_velocity*delta_t;
         modelPlayer = Matrix_Translate(frame_movement.x, frame_movement.y, frame_movement.z)*modelPlayer;
         carPos += frame_movement;
