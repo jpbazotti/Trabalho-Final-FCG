@@ -1594,7 +1594,7 @@
 	<fstream>
 	<sstream>
 
-1663267174 source:c:\users\joão\desktop\f-zero\trabalho-final-fcg\laboratorio_5_codigo_fonte\src\main.cpp
+1663342326 source:c:\users\joão\desktop\f-zero\trabalho-final-fcg\laboratorio_5_codigo_fonte\src\main.cpp
 	<cmath>
 	<cstdio>
 	<cstdlib>
@@ -1617,6 +1617,7 @@
 	<stb_image.h>
 	"utils.h"
 	"matrices.h"
+	"textRendering.h"
 	"bezier.h"
 
 1661356587 c:\users\joão\desktop\f-zero\trabalho-final-fcg\laboratorio_5_codigo_fonte\include\glm\gtc\type_ptr.hpp
@@ -1878,7 +1879,7 @@
 1661356587 c:\users\joão\desktop\f-zero\trabalho-final-fcg\laboratorio_5_codigo_fonte\include\glm\gtc\type_ptr.inl
 	<cstring>
 
-1661356587 c:\users\joão\desktop\f-zero\trabalho-final-fcg\laboratorio_5_codigo_fonte\include\matrices.h
+1663267959 c:\users\joão\desktop\f-zero\trabalho-final-fcg\laboratorio_5_codigo_fonte\include\matrices.h
 	<cstdio>
 	<cstdlib>
 	<glm/mat4x4.hpp>
@@ -1886,4 +1887,13 @@
 	<glm/gtc/matrix_transform.hpp>
 
 1663259100 c:\users\joão\desktop\f-zero\trabalho-final-fcg\laboratorio_5_codigo_fonte\include\bezier.h
+
+1663268464 c:\users\joão\desktop\f-zero\trabalho-final-fcg\laboratorio_5_codigo_fonte\include\textrendering.h
+	<string>
+	"matrices.h"
+	<glad/glad.h>
+	<GLFW/glfw3.h>
+	<glm/mat4x4.hpp>
+	<glm/vec4.hpp>
+	<glm/gtc/type_ptr.hpp>
 
