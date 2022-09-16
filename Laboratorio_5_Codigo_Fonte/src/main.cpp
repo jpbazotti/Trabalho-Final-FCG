@@ -442,7 +442,8 @@ int main(int argc, char* argv[])
 
         if (wPressed)
         {
-            acceleration = Matrix_Translate(max_velocity*carForward.x, max_velocity*carForward.y, max_velocity*carForward.z)*no_movement_acceleration*delta_t;
+            acceleration = no_movement_acceleration*delta_t;
+            acceleration += max_velocity*carForward;
             current_velocity = current_velocity + acceleration;
             glm::vec4 currentPos=carPos;
             carPos+=carForward*current_velocity;
@@ -464,7 +465,8 @@ int main(int argc, char* argv[])
 
         if (sPressed)
         {
-            acceleration = Matrix_Translate(max_velocity*-carForward.x, max_velocity*-carForward.y, max_velocity*-carForward.z)*no_movement_acceleration*delta_t;
+            acceleration = no_movement_acceleration*delta_t;
+            acceleration -= max_velocity*carForward;
             current_velocity = current_velocity + acceleration;
             glm::vec4 currentPos=carPos;
             carPos+=carForward*current_velocity;
