@@ -270,6 +270,10 @@ int main(int argc, char* argv[])
     ComputeNormals(&planemodel);
     BuildTrianglesAndAddToVirtualScene(&planemodel);
 
+    ObjModel trackmodel("../../data/track.obj");
+    ComputeNormals(&trackmodel);
+    BuildTrianglesAndAddToVirtualScene(&trackmodel);
+
     if ( argc > 1 )
     {
         ObjModel model(argv[1]);
@@ -295,7 +299,7 @@ int main(int argc, char* argv[])
     modelPlayer = Matrix_Translate(carPos.x,carPos.y,carPos.z)*modelPlayer;
     modelPlayer = Matrix_Rotate_Y(3.141592/2)*modelPlayer;
 
-    float max_velocity = 2.0;
+    float max_velocity = 10.0;
     float friction = 0.7;
     glm::vec4 current_velocity = glm::vec4(0.0f, 0.0f, 0.0f, 0.0f);
     glm::vec4 acceleration = glm::vec4(0.0f, 0.0f, 0.0f, 0.0f);
@@ -381,9 +385,10 @@ int main(int argc, char* argv[])
         prev_time = current_time;
         // Abaixo definimos as varáveis que efetivamente definem a câmera virtual.
         // Veja slides 195-227 e 229-234 do documento Aula_08_Sistemas_de_Coordenadas.pdf.
-        //glm::vec4 camera_position_c  = Matrix_Translate(-carForward.x*5,-carForward.y*5,-carForward.z*5)*carPos; // Ponto "c", centro da câmera
-        glm::vec4 camera_position_c  = glm::vec4(x,y,z,1.0f);
-        glm::vec4 camera_lookat_l    = glm::vec4(0.0f,0.0f,0.0f,1.0f); // Ponto "l", para onde a câmera (look-at) estará sempre olhando
+        glm::vec4 camera_position_c  = Matrix_Translate(-carForward.x*5,-carForward.y*5+3,-carForward.z*5)*carPos; // Ponto "c", centro da câmera
+        //glm::vec4 camera_position_c  = glm::vec4(x,y,z,1.0f);
+        //glm::vec4 camera_lookat_l    = glm::vec4(0.0f,0.0f,0.0f,1.0f); // Ponto "l", para onde a câmera (look-at) estará sempre olhando
+        glm::vec4 camera_lookat_l    = carPos; // Ponto "l", para onde a câmera (look-at) estará sempre olhando
         //glm::vec4 camera_view_vector = carForward; // Vetor "view", sentido para onde a câmera está virada
         glm::vec4 camera_view_vector = camera_lookat_l - camera_position_c;
         glm::vec4 camera_up_vector   = glm::vec4(0.0f,1.0f,0.0f,0.0f); // Vetor "up" fixado para apontar para o "céu" (eito Y global)
@@ -398,7 +403,7 @@ int main(int argc, char* argv[])
         // Note que, no sistema de coordenadas da câmera, os planos near e far
         // estão no sentido negativo! Veja slides 176-204 do documento Aula_09_Projecoes.pdf.
         float nearplane = -0.1f;  // Posição do "near plane"
-        float farplane  = -30.0f; // Posição do "far plane"
+        float farplane  = -60.0f; // Posição do "far plane"
 
         if (g_UsePerspectiveProjection)
         {
@@ -421,7 +426,6 @@ int main(int argc, char* argv[])
             projection = Matrix_Orthographic(l, r, b, t, nearplane, farplane);
         }
 
-        glm::mat4 model = Matrix_Identity(); // Transformação identidade de modelagem
 
         // Enviamos as matrizes "view" e "projection" para a placa de vídeo
         // (GPU). Veja o arquivo "shader_vertex.glsl", onde estas são
@@ -547,11 +551,40 @@ int main(int argc, char* argv[])
         glUniform1i(object_id_uniform, BLUE_FALCON);
         DrawVirtualObject("Nave1_High");
 
-        // Desenhamos o plano do chão
-        model = Matrix_Translate(0.0f,-1.1f,0.0f);
+        glm::mat4 model = Matrix_Identity(); // Transformação identidade de modelagem
+        model=Matrix_Rotate_X(-PI/2)*model;
+        model=Matrix_Rotate_Y(PI/2)*model;
+        model=Matrix_Scale(18.0f,18.0f,18.0f)*model;
+        model=Matrix_Translate(0.0f,4.5f,0.0f)*model;
         glUniformMatrix4fv(model_uniform, 1 , GL_FALSE , glm::value_ptr(model));
         glUniform1i(object_id_uniform, PLANE);
-        DrawVirtualObject("plane");
+        DrawVirtualObject("object1");
+        DrawVirtualObject("object2");
+        DrawVirtualObject("object3");
+        DrawVirtualObject("object4");
+        DrawVirtualObject("object5");
+        DrawVirtualObject("object6");
+        DrawVirtualObject("object7");
+        DrawVirtualObject("object8");
+        DrawVirtualObject("object9");
+        DrawVirtualObject("object10");
+        DrawVirtualObject("object11");
+        DrawVirtualObject("object12");
+        DrawVirtualObject("object13");
+        DrawVirtualObject("object14");
+        DrawVirtualObject("object15");
+        DrawVirtualObject("object16");
+        DrawVirtualObject("object17");
+        DrawVirtualObject("object18");
+        DrawVirtualObject("object19");
+        DrawVirtualObject("object20");
+        DrawVirtualObject("object21");
+        DrawVirtualObject("object22");
+        DrawVirtualObject("object23");
+        DrawVirtualObject("object24");
+        
+
+        
 
         // Imprimimos na tela os ângulos de Euler que controlam a rotação do
         // terceiro cubo.
