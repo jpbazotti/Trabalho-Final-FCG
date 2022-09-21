@@ -250,15 +250,12 @@ int main(int argc, char* argv[])
     LoadShadersFromFiles();
 
     // Carregamos duas imagens para serem utilizadas como textura
-    LoadTextureImage("../../data/tc-earth_daymap_surface.jpg");      // TextureImage0
-    LoadTextureImage("../../data/tc-earth_nightmap_citylights.gif"); // TextureImage1
-
+    LoadTextureImage("../../data/op.png"); // TextureImage1
+    LoadTextureImage("../../data/BF.png");
     // Construímos a representação de objetos geométricos através de malhas de triângulos
-    ObjModel spheremodel("../../data/sphere.obj");
-    ComputeNormals(&spheremodel);
-    BuildTrianglesAndAddToVirtualScene(&spheremodel);
 
-    ObjModel carmodel("../../data/Nave_1_FBX_v1.obj");
+
+    ObjModel carmodel("../../data/opponent.obj");
     ComputeNormals(&carmodel);
     BuildTrianglesAndAddToVirtualScene(&carmodel);
 
@@ -266,9 +263,6 @@ int main(int argc, char* argv[])
     ComputeNormals(&playermodel);
     BuildTrianglesAndAddToVirtualScene(&playermodel);
 
-    ObjModel planemodel("../../data/plane.obj");
-    ComputeNormals(&planemodel);
-    BuildTrianglesAndAddToVirtualScene(&planemodel);
 
     ObjModel trackmodel("../../data/track.obj");
     ComputeNormals(&trackmodel);
@@ -433,9 +427,10 @@ int main(int argc, char* argv[])
         glUniformMatrix4fv(view_uniform       , 1 , GL_FALSE , glm::value_ptr(view));
         glUniformMatrix4fv(projection_uniform , 1 , GL_FALSE , glm::value_ptr(projection));
 
-        #define SPHERE 0
-        #define BLUE_FALCON  1
-        #define PLANE  2
+        #define BLUE_FALCON  0
+        #define PLANE  1
+        #define OPPONENT  2
+
         if(!raceStart){
             glfwSetTime(0);
             raceStart=true;
@@ -488,51 +483,13 @@ int main(int argc, char* argv[])
         modelPlayer = Matrix_Translate(frame_movement.x, frame_movement.y, frame_movement.z)*modelPlayer;
         carPos += frame_movement;
 
-        std::cout << "acceleration " << acceleration.x << " " << acceleration.y << " " << acceleration.z << "\n";
-        std::cout << "current_velocity " << current_velocity.x << " " << current_velocity.y << " " << current_velocity.z << "\n";
-        std::cout << "frame_movement " << frame_movement.x << " " << frame_movement.y << " " << frame_movement.z << "\n";
+
 
         acceleration *= 0;
 
         glUniformMatrix4fv(model_uniform, 1 , GL_FALSE , glm::value_ptr(modelPlayer));
         glUniform1i(object_id_uniform, BLUE_FALCON);
-        DrawVirtualObject("Mesh1");
-        DrawVirtualObject("Mesh2");
-        DrawVirtualObject("Mesh3");
-        DrawVirtualObject("Mesh4");
-        DrawVirtualObject("Mesh5");
-        DrawVirtualObject("Mesh6");
-        DrawVirtualObject("Mesh7");
-        DrawVirtualObject("Mesh8");
-        DrawVirtualObject("Mesh9");
-        DrawVirtualObject("Mesh10");
-        DrawVirtualObject("Mesh11");
-        DrawVirtualObject("Mesh12");
-        DrawVirtualObject("Mesh13");
-        DrawVirtualObject("Mesh14");
-        DrawVirtualObject("Mesh15");
-        DrawVirtualObject("Mesh16");
-        DrawVirtualObject("Mesh17");
-        DrawVirtualObject("Mesh18");
-        DrawVirtualObject("Mesh19");
-        DrawVirtualObject("Mesh20");
-        DrawVirtualObject("Mesh21");
-        DrawVirtualObject("Mesh22");
-        DrawVirtualObject("Mesh23");
-        DrawVirtualObject("Mesh24");
-        DrawVirtualObject("Mesh25");
-        DrawVirtualObject("Mesh26");
-        DrawVirtualObject("Mesh27");
-        DrawVirtualObject("Mesh28");
-        DrawVirtualObject("Mesh29");
-        DrawVirtualObject("Mesh30");
-        DrawVirtualObject("Mesh31");
-        DrawVirtualObject("Mesh32");
-        DrawVirtualObject("Mesh33");
-        DrawVirtualObject("Mesh34");
-        DrawVirtualObject("Mesh35");
-        DrawVirtualObject("Mesh36");
-        DrawVirtualObject("Mesh37");
+        DrawVirtualObject("blue_falcon");
 
         float bezierTime =current_time/2;
          //oponnent 1
@@ -540,16 +497,16 @@ int main(int argc, char* argv[])
 
         modelOponnent1=opponentMovement(modelOponnent1,bezierTime,controlPoints1_1,controlPoints1_2,3,opponnent1forward,opponnent1pos,oldPos1);
         glUniformMatrix4fv(model_uniform, 1 , GL_FALSE , glm::value_ptr(modelOponnent1));
-        glUniform1i(object_id_uniform, BLUE_FALCON);
-        DrawVirtualObject("Nave1_High");
+        glUniform1i(object_id_uniform, OPPONENT);
+        DrawVirtualObject("opponent");
 
 
         //oponnent 2
 
         modelOponnent2=opponentMovement(modelOponnent2,bezierTime,controlPoints2_1,controlPoints2_2,3,opponnent2forward,opponnent2pos,oldPos2);
         glUniformMatrix4fv(model_uniform, 1 , GL_FALSE , glm::value_ptr(modelOponnent2));
-        glUniform1i(object_id_uniform, BLUE_FALCON);
-        DrawVirtualObject("Nave1_High");
+        glUniform1i(object_id_uniform, OPPONENT);
+        DrawVirtualObject("opponent");
 
         glm::mat4 model = Matrix_Identity(); // Transformação identidade de modelagem
         model=Matrix_Rotate_X(-PI/2)*model;
@@ -558,33 +515,10 @@ int main(int argc, char* argv[])
         model=Matrix_Translate(0.0f,4.5f,0.0f)*model;
         glUniformMatrix4fv(model_uniform, 1 , GL_FALSE , glm::value_ptr(model));
         glUniform1i(object_id_uniform, PLANE);
-        DrawVirtualObject("object1");
-        DrawVirtualObject("object2");
-        DrawVirtualObject("object3");
-        DrawVirtualObject("object4");
-        DrawVirtualObject("object5");
-        DrawVirtualObject("object6");
-        DrawVirtualObject("object7");
-        DrawVirtualObject("object8");
-        DrawVirtualObject("object9");
-        DrawVirtualObject("object10");
-        DrawVirtualObject("object11");
-        DrawVirtualObject("object12");
-        DrawVirtualObject("object13");
-        DrawVirtualObject("object14");
-        DrawVirtualObject("object15");
-        DrawVirtualObject("object16");
-        DrawVirtualObject("object17");
-        DrawVirtualObject("object18");
-        DrawVirtualObject("object19");
-        DrawVirtualObject("object20");
-        DrawVirtualObject("object21");
-        DrawVirtualObject("object22");
-        DrawVirtualObject("object23");
-        DrawVirtualObject("object24");
-        
+        DrawVirtualObject("Track");
 
-        
+
+
 
         // Imprimimos na tela os ângulos de Euler que controlam a rotação do
         // terceiro cubo.
@@ -753,6 +687,7 @@ void LoadShadersFromFiles()
     glUniform1i(glGetUniformLocation(program_id, "TextureImage0"), 0);
     glUniform1i(glGetUniformLocation(program_id, "TextureImage1"), 1);
     glUniform1i(glGetUniformLocation(program_id, "TextureImage2"), 2);
+    glUniform1i(glGetUniformLocation(program_id, "TextureImage3"), 3);
     glUseProgram(0);
 }
 

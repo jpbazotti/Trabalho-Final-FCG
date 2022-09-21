@@ -19,9 +19,10 @@ uniform mat4 view;
 uniform mat4 projection;
 
 // Identificador que define qual objeto está sendo desenhado no momento
-#define SPHERE 0
-#define BLUE_FALCON  1
-#define PLANE  2
+#define BLUE_FALCON  0
+#define PLANE  1
+#define OPPONENT  2
+
 uniform int object_id;
 
 // Parâmetros da axis-aligned bounding box (AABB) do modelo
@@ -32,6 +33,7 @@ uniform vec4 bbox_max;
 uniform sampler2D TextureImage0;
 uniform sampler2D TextureImage1;
 uniform sampler2D TextureImage2;
+uniform sampler2D TextureImage3;
 
 // O valor de saída ("out") de um Fragment Shader é a cor final do fragmento.
 out vec4 color;
@@ -68,32 +70,7 @@ void main()
     float U = 0.0;
     float V = 0.0;
     int  bug=0;
-    if ( object_id == SPHERE )
-    {
-        // PREENCHA AQUI as coordenadas de textura da esfera, computadas com
-        // projeção esférica EM COORDENADAS DO MODELO. Utilize como referência
-        // o slides 134-150 do documento Aula_20_Mapeamento_de_Texturas.pdf.
-        // A esfera que define a projeção deve estar centrada na posição
-        // "bbox_center" definida abaixo.
-
-        // Você deve utilizar:
-        //   função 'length( )' : comprimento Euclidiano de um vetor
-        //   função 'atan( , )' : arcotangente. Veja https://en.wikipedia.org/wiki/Atan2.
-        //   função 'asin( )'   : seno inverso.
-        //   constante M_PI
-        //   variável position_model
-        
-        vec4 bbox_center = (bbox_min + bbox_max) / 2.0;
-        vec4 pL= bbox_center + ((position_model-bbox_center)/length(position_model-bbox_center));
-        vec4 pvec=pL-bbox_center;
-        float theta = atan(pvec.x,pvec.z);
-        float phi = asin(pvec.y);
-        U = (theta+M_PI)/(2*M_PI);
-        V = (phi+M_PI_2)/M_PI;
-        
-        
-    }
-    else if ( object_id == BLUE_FALCON )
+    if ( object_id == BLUE_FALCON || object_id==OPPONENT||object_id == PLANE)
     {
         // PREENCHA AQUI as coordenadas de textura do coelho, computadas com
         // projeção planar XY em COORDENADAS DO MODELO. Utilize como referência
@@ -104,21 +81,7 @@ void main()
         // 'h' no slides 158-160 do documento Aula_20_Mapeamento_de_Texturas.pdf.
         // Veja também a Questão 4 do Questionário 4 no Moodle.
 
-        float minx = bbox_min.x;
-        float maxx = bbox_max.x;
-
-        float miny = bbox_min.y;
-        float maxy = bbox_max.y;
-
-        float minz = bbox_min.z;
-        float maxz = bbox_max.z;
-
-        U = (position_model.x-minx)/(maxx-minx);
-        V = (position_model.y-miny)/(maxy-miny);
-    }
-    else if ( object_id == PLANE )
-    {
-        // Coordenadas de textura do plano, obtidas do arquivo OBJ.
+ 
         U = texcoords.x;
         V = texcoords.y;
     }
@@ -126,21 +89,20 @@ void main()
     // Obtemos a refletância difusa a partir da leitura da imagem TextureImage0
     vec3 Kd0 = texture(TextureImage0, vec2(U,V)).rgb;
     vec3 Kd1 = texture(TextureImage1, vec2(U,V)).rgb;
+    vec3 Kd2 = texture(TextureImage2, vec2(U,V)).rgb;
+    vec3 Kd3= texture(TextureImage3, vec2(U,V)).rgb;
 
     // Equação de Iluminação
     float lambert = max(0,dot(n,l));
-    vec3 lights = (5*Kd1 * (0.1-(lambert)));
-    if(lights.x<0){
-        lights.x=0;
-    }
-    if(lights.y<0){
-        lights.y=0;
-    }
-    if(lights.z<0){
-        lights.z=0;
-    }
-    color.rgb = Kd0 * (lambert + 0.01) + lights;
+    if(object_id==OPPONENT){
+        color.rgb = Kd0 * lambert;
+    }else if(object_id==BLUE_FALCON){
+        color.rgb = Kd1 * lambert;
 
+    }else{
+         color.rgb = Kd0 * lambert;
+    }
+    
     // NOTE: Se você quiser fazer o rendering de objetos transparentes, é
     // necessário:
     // 1) Habilitar a operação de "blending" de OpenGL logo antes de realizar o
