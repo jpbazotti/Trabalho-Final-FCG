@@ -65,11 +65,14 @@ void main()
 
     // Vetor que define o sentido da câmera em relação ao ponto atual.
     vec4 v = normalize(camera_position - p);
+    vec4 r = -l+2*n*(dot(n,l)); 
+
+    vec3 I = vec3(1.0,1.0,1.0); 
 
     // Coordenadas de textura U e V
     float U = 0.0;
     float V = 0.0;
-    int  bug=0;
+    vec3 phong_specular_term;
     if ( object_id == BLUE_FALCON || object_id==OPPONENT||object_id == PLANE)
     {
         // PREENCHA AQUI as coordenadas de textura do coelho, computadas com
@@ -84,6 +87,7 @@ void main()
  
         U = texcoords.x;
         V = texcoords.y;
+
     }
 
     // Obtemos a refletância difusa a partir da leitura da imagem TextureImage0
@@ -95,9 +99,15 @@ void main()
     // Equação de Iluminação
     float lambert = max(0,dot(n,l));
     if(object_id==OPPONENT){
-        color.rgb = Kd0 * lambert;
+        vec3 Ks = vec3(0.8,0.8,0.8);
+        float q = 32.0;
+        phong_specular_term=Ks*I*(pow(max(0,dot(r,v)),q));
+        color.rgb = Kd0 * lambert + phong_specular_term;
     }else if(object_id==BLUE_FALCON){
-        color.rgb = Kd1 * lambert;
+        vec3 Ks = vec3(0.8,0.8,0.8);
+        float q = 32.0;
+        phong_specular_term=Ks*I*(pow(max(0,dot(r,v)),q));
+        color.rgb = Kd1 * lambert + phong_specular_term;
 
     }else{
          color.rgb = Kd0 * lambert;
