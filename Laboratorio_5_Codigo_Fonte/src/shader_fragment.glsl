@@ -25,7 +25,7 @@ uniform mat4 projection;
 #define BLUE_FALCON  0
 #define PLANE  1
 #define OPPONENT  2
-#define SKYBOX 3
+#define SPHERE 3
 
 uniform int object_id;
 
@@ -69,7 +69,7 @@ void main()
     vec4 n = normalize(normal);
 
     // Vetor que define o sentido da fonte de luz em relação ao ponto atual.
-    vec4 l = normalize(vec4(1.0,1.0,0.0,0.0));
+    vec4 l = normalize(vec4(-1.0,1.0,0.0,0.0));
 
     // Vetor que define o sentido da câmera em relação ao ponto atual.
     vec4 v = normalize(camera_position - p);
@@ -77,10 +77,7 @@ void main()
     // Coordenadas de textura U e V
     float U = 0.0;
     float V = 0.0;
-    int  bug=0;
-    if(object_id==PLANE){
 
-    }
     if ( object_id == BLUE_FALCON || object_id==OPPONENT || object_id == PLANE)
     {
         // PREENCHA AQUI as coordenadas de textura do coelho, computadas com
@@ -96,25 +93,39 @@ void main()
         U = texcoords.x;
         V = texcoords.y;
     }
+     if ( object_id == SPHERE )
+    {
+        vec4 bbox_center = (bbox_min + bbox_max) / 2.0;
+        vec4 pL= bbox_center + ((position_model-bbox_center)/length(position_model-bbox_center));
+        vec4 pvec=pL-bbox_center;
+        float theta = atan(pvec.x,pvec.z);
+        float phi = asin(pvec.y);
+        U = (theta+M_PI)/(2*M_PI);
+        V = (phi+M_PI_2)/M_PI;  
+    }
 
     // Obtemos a refletância difusa a partir da leitura da imagem TextureImage0
     vec3 Kd0 = texture(TextureImage0, vec2(U,V)).rgb;
     vec3 Kd1 = texture(TextureImage1, vec2(U,V)).rgb;
     vec3 Kd2 = texture(TextureImage2, vec2(U,V)).rgb;
     vec3 Kd3 = texture(TextureImage3, vec2(U,V)).rgb;
+    vec3 I = vec3(1.0,0.61,0.43); 
 
     // Equação de Iluminação
-    float lambert = max(0,dot(n,l));
+    vec3 lambert = I*max(0,dot(n,l));
+    vec4 r = -l+2*n*(dot(n,l)); 
+    vec3 Ks = vec3(0.8,0.8,0.8);
+    float q = 32.0;
+    vec3 phong_specular_term  = Ks*I*(pow(max(0,dot(r,v)),q));
+
     if(object_id==OPPONENT){
-        color.rgb = Kd0 * lambert;
+        color.rgb = Kd0 * lambert+phong_specular_term;;
     }else if(object_id==BLUE_FALCON){
-        vec4 r = -l+2*n*(dot(n,l)); 
-        vec3 Ks = vec3(0.8,0.8,0.8);
-        float q = 32.0;
-        vec3 I = vec3(1.0,1.0,1.0); 
-        vec3 phong_specular_term  = Ks*I*(pow(max(0,dot(r,v)),q));
+
         color.rgb = Kd1 * lambert+phong_specular_term;
 
+    }else if(object_id==SPHERE){
+        color.rgb = Kd2;
     }else{
         color.rgb = Kd0 * lambert;
     }

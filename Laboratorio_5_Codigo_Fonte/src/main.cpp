@@ -255,15 +255,8 @@ int main(int argc, char *argv[])
     // Carregamos duas imagens para serem utilizadas como textura
     LoadTextureImage("../../data/op.png"); // TextureImage1
     LoadTextureImage("../../data/BF.png");
-    std::vector<std::string> faces=
-    {
-    "../../data/nz.png",
-    "../../data/pz.png",
-    "../../data/py.png",
-    "../../data/ny.png",
-    "../../data/px.png",
-    "../../data/nx.png"
-    };
+    LoadTextureImage("../../data/retro.png");
+
  
     // Construímos a representação de objetos geométricos através de malhas de triângulos
 
@@ -279,6 +272,9 @@ int main(int argc, char *argv[])
     ComputeNormals(&trackmodel);
     BuildTrianglesAndAddToVirtualScene(&trackmodel);
 
+    ObjModel spheremodel("../../data/sphere.obj");
+    ComputeNormals(&spheremodel);
+    BuildTrianglesAndAddToVirtualScene(&spheremodel);
 
     if (argc > 1)
     {
@@ -292,7 +288,7 @@ int main(int argc, char *argv[])
     // Habilitamos o Z-buffer. Veja slides 104-116 do documento Aula_09_Projecoes.pdf.
     glEnable(GL_DEPTH_TEST);
 
-    glEnable(GL_CULL_FACE);
+    glDisable(GL_CULL_FACE);
     glCullFace(GL_BACK);
     glFrontFace(GL_CCW);
 
@@ -364,6 +360,7 @@ int main(int argc, char *argv[])
 
     while (!glfwWindowShouldClose(window))
     {
+        glDisable(GL_CULL_FACE);
         // Aqui executamos as operações de renderização
 
         // Definimos a cor do "fundo" do framebuffer como branco.  Tal cor é
@@ -390,6 +387,7 @@ int main(int argc, char *argv[])
         float current_time = (float)glfwGetTime();
         delta_t = current_time - prev_time;
         prev_time = current_time;
+        glm::vec4 camera_position_c;
         if (camType < 2)
         {
             updateCamPos=true;
@@ -398,7 +396,6 @@ int main(int argc, char *argv[])
             float z = r * cos(g_CameraPhi) * cos(g_CameraTheta);
             float x = r * cos(g_CameraPhi) * sin(g_CameraTheta);
             c = glm::vec4(x, y, z, 1.0f);
-            glm::vec4 camera_position_c;
             if (camType == 0)
             {
                 camera_position_c = Matrix_Translate(-carForward.x * r, -carForward.y * r +1.5f , -carForward.z * r) * carPos;
@@ -446,8 +443,8 @@ int main(int argc, char *argv[])
             if(ctrlPressed){
                 c+= crossproduct(w,u)/norm(crossproduct(w,u))*camSpeed*delta_t;
             }
-
-            view = Matrix_Camera_View(c, camera_view_vector, camera_up_vector);
+            camera_position_c=c;
+            view = Matrix_Camera_View(camera_position_c, camera_view_vector, camera_up_vector);
             }
         // Agora computamos a matriz de Projeção.
         glm::mat4 projection;
@@ -465,6 +462,13 @@ int main(int argc, char *argv[])
 #define BLUE_FALCON 0
 #define PLANE 1
 #define OPPONENT 2
+#define SPHERE 3
+        glm::mat4 modelSkybox=Matrix_Translate(camera_position_c.x,camera_position_c.y,camera_position_c.z)*Matrix_Scale(3.0f,3.0f,3.0f)*Matrix_Identity();
+        glUniformMatrix4fv(model_uniform, 1, GL_FALSE, glm::value_ptr(modelSkybox));
+        glUniform1i(object_id_uniform, SPHERE);
+        DrawVirtualObject("sphere");
+        glClear(GL_DEPTH_BUFFER_BIT);
+        glEnable(GL_CULL_FACE);
         if (!raceStart)
         {
             glfwSetTime(0);
