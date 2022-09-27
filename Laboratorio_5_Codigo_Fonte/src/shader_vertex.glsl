@@ -19,6 +19,9 @@ out vec4 position_world;
 out vec4 position_model;
 out vec4 normal;
 out vec2 texcoords;
+out vec3 vexColor;
+
+//layout (location = 4) uniform sampler2D TextureImage0;
 
 void main()
 {
@@ -63,5 +66,16 @@ void main()
 
     // Coordenadas de textura obtidas do arquivo OBJ (se existirem!)
     texcoords = texture_coefficients;
+
+    float U = texcoords.x;
+    float V = texcoords.y;
+
+    vec3 Kd0 = vec3(1.0,1.0,0.0); //texture(TextureImage0, vec2(U,V)).rgb;
+
+    vec4 n = normalize(normal);
+    vec4 l = normalize(vec4(1.0,1.0,0.0,0.0));
+
+    float lambert = max(0,dot(n,l));
+    vexColor = Kd0 * lambert;
 }
 

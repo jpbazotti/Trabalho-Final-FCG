@@ -13,6 +13,8 @@ in vec4 position_model;
 // Coordenadas de textura obtidas do arquivo OBJ (se existirem!)
 in vec2 texcoords;
 
+in vec3 vexColor;
+
 // Matrizes computadas no código C++ e enviadas para a GPU
 uniform mat4 model;
 uniform mat4 view;
@@ -44,6 +46,11 @@ out vec4 color;
 
 void main()
 {
+    if(object_id == PLANE){
+        color.rgb = vexColor;
+        return;
+    }
+
     // Obtemos a posição da câmera utilizando a inversa da matriz que define o
     // sistema de coordenadas da câmera.
     vec4 origin = vec4(0.0, 0.0, 0.0, 1.0);
@@ -70,7 +77,7 @@ void main()
     float U = 0.0;
     float V = 0.0;
     int  bug=0;
-    if ( object_id == BLUE_FALCON || object_id==OPPONENT||object_id == PLANE)
+    if ( object_id == BLUE_FALCON || object_id==OPPONENT || object_id == PLANE)
     {
         // PREENCHA AQUI as coordenadas de textura do coelho, computadas com
         // projeção planar XY em COORDENADAS DO MODELO. Utilize como referência
@@ -90,7 +97,7 @@ void main()
     vec3 Kd0 = texture(TextureImage0, vec2(U,V)).rgb;
     vec3 Kd1 = texture(TextureImage1, vec2(U,V)).rgb;
     vec3 Kd2 = texture(TextureImage2, vec2(U,V)).rgb;
-    vec3 Kd3= texture(TextureImage3, vec2(U,V)).rgb;
+    vec3 Kd3 = texture(TextureImage3, vec2(U,V)).rgb;
 
     // Equação de Iluminação
     float lambert = max(0,dot(n,l));
@@ -100,7 +107,7 @@ void main()
         color.rgb = Kd1 * lambert;
 
     }else{
-         color.rgb = Kd0 * lambert;
+        color.rgb = Kd0 * lambert;
     }
     
     // NOTE: Se você quiser fazer o rendering de objetos transparentes, é
