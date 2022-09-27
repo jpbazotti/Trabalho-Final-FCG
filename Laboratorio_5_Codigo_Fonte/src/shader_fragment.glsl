@@ -14,6 +14,7 @@ in vec4 position_model;
 in vec2 texcoords;
 
 in vec3 vexColor;
+in vec3 texcoordsSky;
 
 // Matrizes computadas no código C++ e enviadas para a GPU
 uniform mat4 model;
@@ -24,6 +25,7 @@ uniform mat4 projection;
 #define BLUE_FALCON  0
 #define PLANE  1
 #define OPPONENT  2
+#define SKYBOX 3
 
 uniform int object_id;
 
@@ -36,7 +38,7 @@ uniform sampler2D TextureImage0;
 uniform sampler2D TextureImage1;
 uniform sampler2D TextureImage2;
 uniform sampler2D TextureImage3;
-
+uniform samplerCube skybox;
 // O valor de saída ("out") de um Fragment Shader é a cor final do fragmento.
 out vec4 color;
 
@@ -50,7 +52,6 @@ void main()
         color.rgb = vexColor;
         return;
     }
-
     // Obtemos a posição da câmera utilizando a inversa da matriz que define o
     // sistema de coordenadas da câmera.
     vec4 origin = vec4(0.0, 0.0, 0.0, 1.0);
@@ -77,6 +78,9 @@ void main()
     float U = 0.0;
     float V = 0.0;
     int  bug=0;
+    if(object_id==PLANE){
+
+    }
     if ( object_id == BLUE_FALCON || object_id==OPPONENT || object_id == PLANE)
     {
         // PREENCHA AQUI as coordenadas de textura do coelho, computadas com

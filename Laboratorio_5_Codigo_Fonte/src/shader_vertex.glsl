@@ -19,6 +19,7 @@ out vec4 position_world;
 out vec4 position_model;
 out vec4 normal;
 out vec2 texcoords;
+
 out vec3 vexColor;
 
 //layout (location = 4) uniform sampler2D TextureImage0;
@@ -38,7 +39,7 @@ void main()
     // slides 41-67 e 69-86 do documento Aula_09_Projecoes.pdf.
 
     gl_Position = projection * view * model * model_coefficients;
-
+    
     // Como as variáveis acima  (tipo vec4) são vetores com 4 coeficientes,
     // também é possível acessar e modificar cada coeficiente de maneira
     // independente. Esses são indexados pelos nomes x, y, z, e w (nessa
@@ -63,9 +64,9 @@ void main()
     // Veja slides 123-151 do documento Aula_07_Transformacoes_Geometricas_3D.pdf.
     normal = inverse(transpose(model)) * normal_coefficients;
     normal.w = 0.0;
+    texcoords = texture_coefficients;
 
     // Coordenadas de textura obtidas do arquivo OBJ (se existirem!)
-    texcoords = texture_coefficients;
 
     float U = texcoords.x;
     float V = texcoords.y;
@@ -77,5 +78,6 @@ void main()
 
     float lambert = max(0,dot(n,l));
     vexColor = Kd0 * lambert;
+    
 }
 
