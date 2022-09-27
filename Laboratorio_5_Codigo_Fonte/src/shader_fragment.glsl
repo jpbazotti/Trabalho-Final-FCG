@@ -108,7 +108,12 @@ void main()
     if(object_id==OPPONENT){
         color.rgb = Kd0 * lambert;
     }else if(object_id==BLUE_FALCON){
-        color.rgb = Kd1 * lambert;
+        vec4 r = -l+2*n*(dot(n,l)); 
+        vec3 Ks = vec3(0.8,0.8,0.8);
+        float q = 32.0;
+        vec3 I = vec3(1.0,1.0,1.0); 
+        vec3 phong_specular_term  = Ks*I*(pow(max(0,dot(r,v)),q));
+        color.rgb = Kd1 * lambert+phong_specular_term;
 
     }else{
         color.rgb = Kd0 * lambert;
