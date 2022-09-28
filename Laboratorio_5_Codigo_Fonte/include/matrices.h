@@ -230,14 +230,15 @@ float dotproduct(glm::vec4 u, glm::vec4 v,std::string call)
 glm::mat4 Matrix_Camera_View(glm::vec4 position_c, glm::vec4 view_vector, glm::vec4 up_vector)
 {
     glm::vec4 w = -view_vector;
+    if(w==up_vector){
+        w.y=0.9f;
+    }
     glm::vec4 u = crossproduct(up_vector, w);
 
     // Normalizamos os vetores u e w
     
     w = w / norm(w);
-    if(norm(u)!=0){
     u = u / norm(u);
-    }
 
     glm::vec4 v = crossproduct(w,u);
 
