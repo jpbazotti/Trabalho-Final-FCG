@@ -20,7 +20,7 @@ glm::mat4 opponentMovement(glm::mat4 model, float bezierTime, std::vector<glm::v
     glm::vec4 newPoint = BezierPoint - oldpos;
 
 
-    float dotprod = dotproduct(normalize(newPoint), forward);
+    float dotprod = dotproduct(normalize(newPoint), forward,"oponnent?");
     if (dotprod > 1)
     {
         dotprod = 1;

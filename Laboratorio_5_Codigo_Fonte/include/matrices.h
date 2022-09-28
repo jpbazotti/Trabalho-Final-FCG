@@ -3,6 +3,8 @@
 
 #include <cstdio>
 #include <cstdlib>
+#include <iostream>
+
 
 #include <glm/mat4x4.hpp>
 #include <glm/vec4.hpp>
@@ -202,7 +204,7 @@ glm::vec4 crossproduct(glm::vec4 u, glm::vec4 v)
 
 // Produto escalar entre dois vetores u e v definidos em um sistema de
 // coordenadas ortonormal.
-float dotproduct(glm::vec4 u, glm::vec4 v)
+float dotproduct(glm::vec4 u, glm::vec4 v,std::string call)
 {
     float u1 = u.x;
     float u2 = u.y;
@@ -212,9 +214,11 @@ float dotproduct(glm::vec4 u, glm::vec4 v)
     float v2 = v.y;
     float v3 = v.z;
     float v4 = v.w;
-
+    std::cout<<"u"<<" "<<u.x<< " "<<u.y<<"  "<< u.z<<" "<<u.w<<"\n";
+    std::cout<<"v"<<" "<<v.x<< " "<<v.y<<"  "<< v.z<<" "<<v.w<<"\n\n";
     if ( u4 != 0.0f || v4 != 0.0f )
     {
+        std::cout<<call;
         fprintf(stderr, "ERROR: Produto escalar não definido para pontos.\n");
         std::exit(EXIT_FAILURE);
     }
@@ -247,9 +251,9 @@ glm::mat4 Matrix_Camera_View(glm::vec4 position_c, glm::vec4 view_vector, glm::v
     float wz = w.z;
 
     return Matrix(
-        ux   , uy   , uz   , -dotproduct(u , position_c - origin_o) ,
-        vx   , vy   , vz   , -dotproduct(v , position_c - origin_o) ,
-        wx   , wy   , wz   , -dotproduct(w , position_c - origin_o) ,
+        ux   , uy   , uz   , -dotproduct(u , position_c - origin_o,"cameracall") ,
+        vx   , vy   , vz   , -dotproduct(v , position_c - origin_o,"cameracall") ,
+        wx   , wy   , wz   , -dotproduct(w , position_c - origin_o,"cameracall") ,
         0.0f , 0.0f , 0.0f , 1.0f
     );
 }
