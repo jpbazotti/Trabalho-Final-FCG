@@ -10,6 +10,10 @@ layout (location = 2) in vec2 texture_coefficients;
 uniform mat4 model;
 uniform mat4 view;
 uniform mat4 projection;
+uniform sampler2D TextureImage0;
+uniform sampler2D TextureImage1;
+uniform sampler2D TextureImage2;
+uniform sampler2D TextureImage3;
 
 // Atributos de vértice que serão gerados como saída ("out") pelo Vertex Shader.
 // ** Estes serão interpolados pelo rasterizador! ** gerando, assim, valores
@@ -65,19 +69,21 @@ void main()
     normal = inverse(transpose(model)) * normal_coefficients;
     normal.w = 0.0;
     texcoords = texture_coefficients;
+    vec3 I = vec3(1.0,0.61,0.43); 
 
     // Coordenadas de textura obtidas do arquivo OBJ (se existirem!)
 
     float U = texcoords.x;
     float V = texcoords.y;
 
-    vec3 Kd0 = vec3(1.0,1.0,0.0); //texture(TextureImage0, vec2(U,V)).rgb;
+    vec3 Kd0 = texture(TextureImage0, vec2(U,V)).rgb;
 
     vec4 n = normalize(normal);
     vec4 l = normalize(vec4(1.0,1.0,0.0,0.0));
 
-    float lambert = max(0,dot(n,l));
+    vec3 lambert = I*max(0,dot(n,l));
     vexColor = Kd0 * lambert;
+    vexColor=pow(vexColor.rgb, vec3(1.0,1.0,1.0)/2.2);
     
 }
 
