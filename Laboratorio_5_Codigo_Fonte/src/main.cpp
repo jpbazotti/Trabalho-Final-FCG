@@ -257,7 +257,7 @@ int main(int argc, char *argv[])
     LoadTextureImage("../../data/BF.png");
     LoadTextureImage("../../data/retro.png");
 
- 
+
     // Construímos a representação de objetos geométricos através de malhas de triângulos
 
     ObjModel carmodel("../../data/opponent.obj");
@@ -299,7 +299,7 @@ int main(int argc, char *argv[])
     glm::vec4 carPos = glm::vec4(0.0f, 0.0f, 0.0f, 1.0f);
     glm::vec4 carForward = glm::vec4(1.0f, 0.0f, 0.0f, 0.0f);
     glm::mat4 modelPlayer;
-    float max_velocity = 10.0;
+    float max_velocity = 20.0;
     float friction = 0.7;
     glm::vec4 current_velocity = glm::vec4(0.0f, 0.0f, 0.0f, 0.0f);
     glm::vec4 acceleration = glm::vec4(0.0f, 0.0f, 0.0f, 0.0f);
@@ -398,7 +398,7 @@ int main(int argc, char *argv[])
             c = glm::vec4(x, y, z, 1.0f);
             if (camType == 0)
             {
-                camera_position_c = Matrix_Translate(-carForward.x * r, -carForward.y * r +1.5f , -carForward.z * r) * carPos;
+                camera_position_c = Matrix_Translate(-carForward.x*6 /(1+norm(current_velocity)*0.04), 2/(1+norm(current_velocity)*0.1), -carForward.z*6/(1+norm(current_velocity)*0.04)) * carPos;
             }
             else if (camType == 1)
             {
@@ -419,7 +419,7 @@ int main(int argc, char *argv[])
             float vy = sin(g_CameraPhi);
             float vz = cos(g_CameraPhi)*cos(g_CameraTheta);
             float vx = cos(g_CameraPhi)*sin(g_CameraTheta);
-            glm::vec4 camera_view_vector = glm::vec4(vx,vy,vz,0.0f); 
+            glm::vec4 camera_view_vector = glm::vec4(vx,vy,vz,0.0f);
             glm::vec4 camera_up_vector   = glm::vec4(0.0f,1.0f,0.0f,0.0f);
             glm::vec4 w =-camera_view_vector/norm(camera_view_vector);
             glm::vec4 intermediate=crossproduct(camera_up_vector,camera_view_vector);
@@ -633,7 +633,7 @@ unsigned int loadCubemap(std::vector<std::string> faces)
         unsigned char *data = stbi_load(faces[i].c_str(), &width, &height, &nrChannels, 0);
         if (data)
         {
-            glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 
+            glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i,
                          0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data
             );
             stbi_image_free(data);
@@ -651,7 +651,7 @@ unsigned int loadCubemap(std::vector<std::string> faces)
     glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
 
     return textureID;
-} 
+}
 // Função que desenha um objeto armazenado em g_VirtualScene. Veja definição
 // dos objetos na função BuildTrianglesAndAddToVirtualScene().
 void DrawVirtualObject(const char *object_name)

@@ -69,7 +69,7 @@ void main()
     vec4 n = normalize(normal);
 
     // Vetor que define o sentido da fonte de luz em relação ao ponto atual.
-    vec4 l = normalize(vec4(-1.0,1.0,0.0,0.0));
+    vec4 l = normalize(vec4(1.0,1.0,0.0,0.0));
 
     // Vetor que define o sentido da câmera em relação ao ponto atual.
     vec4 v = normalize(camera_position - p);
@@ -100,7 +100,7 @@ void main()
         vec4 pvec=pL-bbox_center;
         float theta = atan(pvec.x,pvec.z);
         float phi = asin(pvec.y);
-        U = (theta+M_PI)/(2*M_PI);
+        U = 1-(theta+M_PI)/(2*M_PI);
         V = (phi+M_PI_2)/M_PI;  
     }
 
