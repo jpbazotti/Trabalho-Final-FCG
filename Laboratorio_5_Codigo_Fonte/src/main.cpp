@@ -256,6 +256,7 @@ int main(int argc, char *argv[])
     LoadTextureImage("../../data/op.png"); // TextureImage1
     LoadTextureImage("../../data/BF.png");
     LoadTextureImage("../../data/retro.png");
+    LoadTextureImage("../../data/track.png");
 
 
     // Construímos a representação de objetos geométricos através de malhas de triângulos
@@ -410,6 +411,9 @@ int main(int argc, char *argv[])
 
             // Computamos a matriz "View" utilizando os parâmetros da câmera para
             // definir o sistema de coordenadas da câmera.  Veja slides 2-14, 184-190 e 236-242 do documento Aula_08_Sistemas_de_Coordenadas.pdf.
+            std::cout<<"camera_position_c"<<" "<<camera_position_c.x<< " "<<camera_position_c.y<<"  "<< camera_position_c.z<<" "<<camera_position_c.w<<"\n";
+            std::cout<<"camera_view_vector"<<" "<<camera_view_vector.x<< " "<<camera_view_vector.y<<"  "<< camera_view_vector.z<<" "<<camera_view_vector.w<<"\n";
+            std::cout<<"camera_up_vector"<<" "<<camera_up_vector.x<< " "<<camera_up_vector.y<<"  "<< camera_up_vector.z<<" "<<camera_up_vector.w<<"\n\n";
             view = Matrix_Camera_View(camera_position_c, camera_view_vector, camera_up_vector);
         }else{
             if(updateCamPos){
@@ -452,7 +456,7 @@ int main(int argc, char *argv[])
         // Note que, no sistema de coordenadas da câmera, os planos near e far
         // estão no sentido negativo! Veja slides 176-204 do documento Aula_09_Projecoes.pdf.
         float nearplane = -0.1f; // Posição do "near plane"
-        float farplane = -60.0f; // Posição do "far plane"
+        float farplane = -100.0f; // Posição do "far plane"
         float field_of_view = 3.141592 / 3.0f;
         projection = Matrix_Perspective(field_of_view, g_ScreenRatio, nearplane, farplane);
         glUniformMatrix4fv(view_uniform, 1, GL_FALSE, glm::value_ptr(view));
@@ -549,13 +553,14 @@ int main(int argc, char *argv[])
         DrawVirtualObject("opponent");
 
         glm::mat4 model = Matrix_Identity(); // Transformação identidade de modelagem
-        model = Matrix_Rotate_X(-PI / 2) * model;
-        model = Matrix_Rotate_Y(PI / 2) * model;
-        model = Matrix_Scale(18.0f, 18.0f, 18.0f) * model;
-        model = Matrix_Translate(0.0f, 4.5f, 0.0f) * model;
+        model = Matrix_Rotate_Y(-PI / 2) * model;
+        model = Matrix_Scale(8.0f, 8.0f, 8.0f) * model;
+        model = Matrix_Translate(0.0f, -0.8f, 0.0f) * model;
         glUniformMatrix4fv(model_uniform, 1, GL_FALSE, glm::value_ptr(model));
         glUniform1i(object_id_uniform, PLANE);
         DrawVirtualObject("Track");
+
+
 
         glfwSwapBuffers(window);
         glfwPollEvents();

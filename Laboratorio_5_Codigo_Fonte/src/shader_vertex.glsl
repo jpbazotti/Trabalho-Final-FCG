@@ -76,13 +76,16 @@ void main()
     float U = texcoords.x;
     float V = texcoords.y;
 
-    vec3 Kd0 = texture(TextureImage0, vec2(U,V)).rgb;
+    vec3 Kd0 = texture(TextureImage3, vec2(U,V)).rgb;
 
     vec4 n = normalize(normal);
     vec4 l = normalize(vec4(1.0,1.0,0.0,0.0));
+    vec3 Ia = vec3(0.2,0.2,0.2); 
+    vec3 Ka = Kd0/2;
+    vec3 ambient_term = Ka*Ia; 
 
     vec3 lambert = I*max(0,dot(n,l));
-    vexColor = Kd0 * lambert;
+    vexColor = Kd0 * lambert + ambient_term;
     vexColor=pow(vexColor.rgb, vec3(1.0,1.0,1.0)/2.2);
     
 }
