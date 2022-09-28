@@ -233,8 +233,11 @@ glm::mat4 Matrix_Camera_View(glm::vec4 position_c, glm::vec4 view_vector, glm::v
     glm::vec4 u = crossproduct(up_vector, w);
 
     // Normalizamos os vetores u e w
+    
     w = w / norm(w);
+    if(norm(u)!=0){
     u = u / norm(u);
+    }
 
     glm::vec4 v = crossproduct(w,u);
 
@@ -251,9 +254,9 @@ glm::mat4 Matrix_Camera_View(glm::vec4 position_c, glm::vec4 view_vector, glm::v
     float wz = w.z;
 
     return Matrix(
-        ux   , uy   , uz   , -dotproduct(u , position_c - origin_o,"cameracall") ,
-        vx   , vy   , vz   , -dotproduct(v , position_c - origin_o,"cameracall") ,
-        wx   , wy   , wz   , -dotproduct(w , position_c - origin_o,"cameracall") ,
+        ux   , uy   , uz   , -dotproduct(u , position_c - origin_o,"cameracall1") ,
+        vx   , vy   , vz   , -dotproduct(v , position_c - origin_o,"cameracall2") ,
+        wx   , wy   , wz   , -dotproduct(w , position_c - origin_o,"cameracall3") ,
         0.0f , 0.0f , 0.0f , 1.0f
     );
 }
