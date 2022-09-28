@@ -1,11 +1,11 @@
-today: 
-new path for opponents 
+today:
+new path for opponents
 
 
 future:
 
 back to curve
-car strafe
+car strafe (mouse buttons)
 collision
 win condition
 boost
@@ -16,13 +16,3 @@ No mínimo sua aplicação deve utilizar três tipos de teste de intersecção (
 Estes testes devem ter algum propósito dentro da lógica de sua aplicação.
 
 Os testes de colisão devem ser implementados em um arquivo à parte, nomeado "collisions.cpp".
-
-
-
-
-
-
-
-
-
-
