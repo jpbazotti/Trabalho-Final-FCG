@@ -181,8 +181,7 @@ GLuint g_NumLoadedTextures = 0;
 
 int main(int argc, char *argv[])
 {
-    // Inicializamos a biblioteca GLFW, utilizada para criar uma janela do
-    // sistema operacional, onde poderemos renderizar com OpenGL.
+
     int success = glfwInit();
     if (!success)
     {
@@ -252,8 +251,8 @@ int main(int argc, char *argv[])
     //
     LoadShadersFromFiles();
 
-    // Carregamos duas imagens para serem utilizadas como textura
-    LoadTextureImage("../../data/op.png"); // TextureImage1
+    // Carregamos as imagens para serem utilizadas como textura
+    LoadTextureImage("../../data/op.png"); 
     LoadTextureImage("../../data/BF.png");
     LoadTextureImage("../../data/retro.png");
     LoadTextureImage("../../data/track.png");
@@ -277,16 +276,19 @@ int main(int argc, char *argv[])
     ComputeNormals(&spheremodel);
     BuildTrianglesAndAddToVirtualScene(&spheremodel);
 
+    ObjModel decormodel("../../data/decor.obj");
+    ComputeNormals(&decormodel);
+    BuildTrianglesAndAddToVirtualScene(&decormodel);
+
     if (argc > 1)
     {
         ObjModel model(argv[1]);
         BuildTrianglesAndAddToVirtualScene(&model);
     }
 
-    // Inicializamos o código para renderização de texto.
     TextRendering_Init();
 
-    // Habilitamos o Z-buffer. Veja slides 104-116 do documento Aula_09_Projecoes.pdf.
+    // Habilitamos o Z-buffer, ele depois é manipulado para desenhar o cenario.
     glEnable(GL_DEPTH_TEST);
 
     glDisable(GL_CULL_FACE);
@@ -356,34 +358,25 @@ int main(int argc, char *argv[])
     controlPoints2_2.push_back(glm::vec4(-20.0f, 0.16f, -1.6f, 1.0f));
     controlPoints2_2.push_back(glm::vec4(0.0f, 0.16f, -1.0f, 1.0f));
 
+    //decor model
+
+
     bool raceStart = false;
     bool updateCamPos;
 
     while (!glfwWindowShouldClose(window))
     {
         glDisable(GL_CULL_FACE);
-        // Aqui executamos as operações de renderização
-
-        // Definimos a cor do "fundo" do framebuffer como branco.  Tal cor é
-        // definida como coeficientes RGBA: Red, Green, Blue, Alpha; isto é:
-        // Vermelho, Verde, Azul, Alpha (valor de transparência).
-        // Conversaremos sobre sistemas de cores nas aulas de Modelos de Iluminação.
-        //
-        //           R     G     B     A
+     
         glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
 
-        // "Pintamos" todos os pixels do framebuffer com a cor definida acima,
-        // e também resetamos todos os pixels do Z-buffer (depth buffer).
+
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-        // Pedimos para a GPU utilizar o programa de GPU criado acima (contendo
-        // os shaders de vértice e fragmentos).
+
         glUseProgram(program_id);
 
-        // Computamos a posição da câmera utilizando coordenadas esféricas.  As
-        // variáveis g_CameraDistance, g_CameraPhi, e g_CameraTheta são
-        // controladas pelo mouse do usuário. Veja as funções CursorPosCallback()
-        // e ScrollCallback().
+
         glm::mat4 view;
         float current_time = (float)glfwGetTime();
         delta_t = current_time - prev_time;
@@ -397,23 +390,23 @@ int main(int argc, char *argv[])
             float z = r * cos(g_CameraPhi) * cos(g_CameraTheta);
             float x = r * cos(g_CameraPhi) * sin(g_CameraTheta);
             c = glm::vec4(x, y, z, 1.0f);
+            //cameras dinamica e lookat
             if (camType == 0)
             {
-                camera_position_c = Matrix_Translate(-carForward.x*6 /(1+norm(current_velocity)*0.04), 2/(1+norm(current_velocity)*0.1), -carForward.z*6/(1+norm(current_velocity)*0.04)) * carPos;
+                camera_position_c = Matrix_Translate(-carForward.x*6 /(1+norm(current_velocity)*0.04), 2/(1+norm(current_velocity)*0.05f), -carForward.z*6/(1+norm(current_velocity)*0.04)) * carPos;
             }
             else if (camType == 1)
             {
                 camera_position_c = Matrix_Translate(carPos.x, carPos.y, carPos.z) * c;
             }
-            glm::vec4 camera_lookat_l = carPos; // Ponto "l", para onde a câmera (look-at) estará sempre olhando
+            glm::vec4 camera_lookat_l = carPos; 
             glm::vec4 camera_view_vector = camera_lookat_l - camera_position_c;
-            glm::vec4 camera_up_vector = glm::vec4(0.0f, 1.0f, 0.0f, 0.0f); // Vetor "up" fixado para apontar para o "céu" (eito Y global)
+            glm::vec4 camera_up_vector = glm::vec4(0.0f, 1.0f, 0.0f, 0.0f); 
 
-            // Computamos a matriz "View" utilizando os parâmetros da câmera para
-            // definir o sistema de coordenadas da câmera.  Veja slides 2-14, 184-190 e 236-242 do documento Aula_08_Sistemas_de_Coordenadas.pdf.
 
             view = Matrix_Camera_View(camera_position_c, camera_view_vector, camera_up_vector);
         }else{
+            //camera livre
             if(updateCamPos){
                 updateCamPos=false;
                 c=Matrix_Translate(-carForward.x,-carForward.y,carForward.z)*carPos;
@@ -448,35 +441,41 @@ int main(int argc, char *argv[])
             camera_position_c=c;
             view = Matrix_Camera_View(camera_position_c, camera_view_vector, camera_up_vector);
             }
-        // Agora computamos a matriz de Projeção.
         glm::mat4 projection;
 
-        // Note que, no sistema de coordenadas da câmera, os planos near e far
-        // estão no sentido negativo! Veja slides 176-204 do documento Aula_09_Projecoes.pdf.
-        float nearplane = -0.1f; // Posição do "near plane"
-        float farplane = -100.0f; // Posição do "far plane"
-        float field_of_view = 3.141592 / 3.0f;
+
+        float nearplane = -0.1f; 
+        float farplane = -200.0f; 
+        float field_of_view = (PI / 3.0f)-(norm(current_velocity)*0.01f);
         projection = Matrix_Perspective(field_of_view, g_ScreenRatio, nearplane, farplane);
         glUniformMatrix4fv(view_uniform, 1, GL_FALSE, glm::value_ptr(view));
         glUniformMatrix4fv(projection_uniform, 1, GL_FALSE, glm::value_ptr(projection));
 
-// definição dos controles do player
 #define BLUE_FALCON 0
 #define PLANE 1
 #define OPPONENT 2
 #define SPHERE 3
+#define DECOR 4
+        //skysphere + decoracoes implementadas desenhando primeiro e limpando o zbuffer
         glm::mat4 modelSkybox=Matrix_Translate(camera_position_c.x,camera_position_c.y,camera_position_c.z)*Matrix_Scale(3.0f,3.0f,3.0f)*Matrix_Identity();
+        glm::mat4 modelDecor = Matrix_Translate(camera_position_c.x+0.6f,camera_position_c.y+0.05f,camera_position_c.z-0.01f)*Matrix_Rotate_Z(PI/8)*Matrix_Rotate_Y(PI/2)*Matrix_Identity();
         glUniformMatrix4fv(model_uniform, 1, GL_FALSE, glm::value_ptr(modelSkybox));
         glUniform1i(object_id_uniform, SPHERE);
         DrawVirtualObject("sphere");
+
+        glUniformMatrix4fv(model_uniform, 1, GL_FALSE, glm::value_ptr(modelDecor));
+        glUniform1i(object_id_uniform, DECOR);
+        DrawVirtualObject("decor");
         glClear(GL_DEPTH_BUFFER_BIT);
         glEnable(GL_CULL_FACE);
+
+
         if (!raceStart)
         {
             glfwSetTime(0);
             raceStart = true;
         }
-
+        // definição dos controles do player e modelo de fisica
         current_velocity -= friction * delta_t * current_velocity;
         if(camType<2){
         if (wPressed)
@@ -517,7 +516,7 @@ int main(int argc, char *argv[])
             current_velocity *= 0;
         }
 
-        if (dotproduct(current_velocity, carForward,"carSpeed?") < 0)
+        if (dotproduct(current_velocity, carForward) < 0)
         {
             current_velocity = norm(current_velocity) * -carForward + acceleration;
         }
@@ -549,8 +548,8 @@ int main(int argc, char *argv[])
         glUniformMatrix4fv(model_uniform, 1, GL_FALSE, glm::value_ptr(modelOponnent2));
         glUniform1i(object_id_uniform, OPPONENT);
         DrawVirtualObject("opponent");
-
-        glm::mat4 model = Matrix_Identity(); // Transformação identidade de modelagem
+        // Pista
+        glm::mat4 model = Matrix_Identity(); 
         model = Matrix_Rotate_Y(-PI / 2) * model;
         model = Matrix_Scale(8.0f, 8.0f, 8.0f) * model;
         model = Matrix_Translate(0.0f, -0.8f, 0.0f) * model;
@@ -564,10 +563,8 @@ int main(int argc, char *argv[])
         glfwPollEvents();
     }
 
-    // Finalizamos o uso dos recursos do sistema operacional
     glfwTerminate();
 
-    // Fim do programa
     return 0;
 }
 

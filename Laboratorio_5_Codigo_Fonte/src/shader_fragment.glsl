@@ -26,6 +26,7 @@ uniform mat4 projection;
 #define PLANE  1
 #define OPPONENT  2
 #define SPHERE 3
+#define DECOR 4
 
 uniform int object_id;
 
@@ -119,15 +120,21 @@ void main()
     vec3 phong_specular_term  = Ks*I*(pow(max(0,dot(r,v)),q));
 
     if(object_id==OPPONENT){
-        color.rgb = Kd0 * lambert+phong_specular_term;;
+        color.rgb = Kd0 * lambert+phong_specular_term;
     }else if(object_id==BLUE_FALCON){
 
         color.rgb = Kd1 * lambert+phong_specular_term;
 
     }else if(object_id==SPHERE){
         color.rgb = Kd2;
-    }else{
-        color.rgb = Kd0 * lambert;
+    }else if(object_id==DECOR){
+        vec4 l2 = normalize(vec4(-1.0,5.0,0.0,0.0));
+        vec3 lambert2 = I*max(0,dot(n,l2));
+        vec3 Ia = vec3(0.87,0,0.42); 
+        vec3 Ka = vec3(0.2,0.2,0.2);
+        vec3 ambient_term = Ka*Ia; 
+
+        color.rgb = vec3(0.8,0.4,0.08) * lambert2+phong_specular_term+ambient_term;
     }
     
     // NOTE: Se você quiser fazer o rendering de objetos transparentes, é

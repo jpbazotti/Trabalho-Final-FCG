@@ -3,7 +3,6 @@
 
 #include <cstdio>
 #include <cstdlib>
-#include <iostream>
 
 
 #include <glm/mat4x4.hpp>
@@ -204,7 +203,7 @@ glm::vec4 crossproduct(glm::vec4 u, glm::vec4 v)
 
 // Produto escalar entre dois vetores u e v definidos em um sistema de
 // coordenadas ortonormal.
-float dotproduct(glm::vec4 u, glm::vec4 v,std::string call)
+float dotproduct(glm::vec4 u, glm::vec4 v)
 {
     float u1 = u.x;
     float u2 = u.y;
@@ -214,11 +213,8 @@ float dotproduct(glm::vec4 u, glm::vec4 v,std::string call)
     float v2 = v.y;
     float v3 = v.z;
     float v4 = v.w;
-    std::cout<<"u"<<" "<<u.x<< " "<<u.y<<"  "<< u.z<<" "<<u.w<<"\n";
-    std::cout<<"v"<<" "<<v.x<< " "<<v.y<<"  "<< v.z<<" "<<v.w<<"\n\n";
     if ( u4 != 0.0f || v4 != 0.0f )
     {
-        std::cout<<call;
         fprintf(stderr, "ERROR: Produto escalar não definido para pontos.\n");
         std::exit(EXIT_FAILURE);
     }
@@ -230,10 +226,11 @@ float dotproduct(glm::vec4 u, glm::vec4 v,std::string call)
 glm::mat4 Matrix_Camera_View(glm::vec4 position_c, glm::vec4 view_vector, glm::vec4 up_vector)
 {
     glm::vec4 w = -view_vector;
+    float wytemp=w.y;
     if(w==up_vector){
-        w.y=0.9f;
+        wytemp=0.9f;
     }
-    glm::vec4 u = crossproduct(up_vector, w);
+    glm::vec4 u = crossproduct(up_vector, glm::vec4(w.x,wytemp,w.z,w.w));
 
     // Normalizamos os vetores u e w
     
@@ -255,9 +252,9 @@ glm::mat4 Matrix_Camera_View(glm::vec4 position_c, glm::vec4 view_vector, glm::v
     float wz = w.z;
 
     return Matrix(
-        ux   , uy   , uz   , -dotproduct(u , position_c - origin_o,"cameracall1") ,
-        vx   , vy   , vz   , -dotproduct(v , position_c - origin_o,"cameracall2") ,
-        wx   , wy   , wz   , -dotproduct(w , position_c - origin_o,"cameracall3") ,
+        ux   , uy   , uz   , -dotproduct(u , position_c - origin_o) ,
+        vx   , vy   , vz   , -dotproduct(v , position_c - origin_o) ,
+        wx   , wy   , wz   , -dotproduct(w , position_c - origin_o) ,
         0.0f , 0.0f , 0.0f , 1.0f
     );
 }
