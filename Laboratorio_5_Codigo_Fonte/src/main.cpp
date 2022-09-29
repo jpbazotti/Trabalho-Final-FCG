@@ -148,6 +148,7 @@ bool sPressed = false;
 bool dPressed = false;
 bool ctrlPressed=false;
 bool spacePressed=false;
+bool startPressed=false;
 // Variáveis que definem a câmera em coordenadas esféricas, controladas pelo
 // usuário através do mouse (veja função CursorPosCallback()). A posição
 // efetiva da câmera é calculada dentro da função main(), dentro do loop de
@@ -256,6 +257,7 @@ int main(int argc, char *argv[])
     LoadTextureImage("../../data/BF.png");
     LoadTextureImage("../../data/retro.png");
     LoadTextureImage("../../data/track.png");
+    LoadTextureImage("../../data/start.png");
 
 
     // Construímos a representação de objetos geométricos através de malhas de triângulos
@@ -279,6 +281,10 @@ int main(int argc, char *argv[])
     ObjModel decormodel("../../data/decor.obj");
     ComputeNormals(&decormodel);
     BuildTrianglesAndAddToVirtualScene(&decormodel);
+
+    ObjModel startmodel("../../data/start.obj");
+    ComputeNormals(&startmodel);
+    BuildTrianglesAndAddToVirtualScene(&startmodel);
 
     if (argc > 1)
     {
@@ -314,8 +320,8 @@ int main(int argc, char *argv[])
     modelPlayer = Matrix_Rotate_Y(3.141592 / 2) * modelPlayer;
 
     // oponnent vars and model manipulation
-    glm::vec4 oldPos1 = glm::vec4(0.0f, 0.16f, 1.0f, 1.0f);
-    glm::vec4 oldPos2 = glm::vec4(0.0f, 0.16f, -1.0f, 1.0f);
+    glm::vec4 oldPos1 = glm::vec4(0.0f, 0.16f, 2.0f, 1.0f);
+    glm::vec4 oldPos2 = glm::vec4(0.0f, 0.16f, -2.0f, 1.0f);
 
     glm::mat4 modelOponnent1;
     modelOponnent1 = Matrix_Identity();
@@ -366,44 +372,44 @@ int main(int argc, char *argv[])
     controlPoints1_6.push_back(glm::vec4(-49.7859f, 0.16f, 50.4402f, 1.0f));
     controlPoints1_6.push_back(glm::vec4(-54.4495f, 0.16f, 20.2291f, 1.0f));
     controlPoints1_6.push_back(glm::vec4(-66.0504, 0.16f, -13.1143f, 1.0f));
-    controlPoints1_6.push_back(glm::vec4(2.0f,0.16f,1.0f,1.0f));
+    controlPoints1_6.push_back(glm::vec4(3.0f,0.16f,2.0f,1.0f));
     // bezier control points2
 
     std::vector<glm::vec4> controlPoints2_1;
     controlPoints2_1.push_back(oldPos2);
-    controlPoints2_1.push_back(glm::vec4(30.0f, 0.16f, -1.6f, 1.0f));
-    controlPoints2_1.push_back(glm::vec4(30.0f, 0.65f, -3.3f, 1.0f));
-    controlPoints2_1.push_back(glm::vec4(0.0f, 0.16f, -5.0f, 1.0f));
+    controlPoints2_1.push_back(glm::vec4(156.483f, 0.16f, -3.52993f, 1.0f));
+    controlPoints2_1.push_back(glm::vec4(134.85f, 0.16f, -6.45085f, 1.0f));
+    controlPoints2_1.push_back(glm::vec4(132.0f, 0.16f, 60.9768f, 1.0f));
 
     std::vector<glm::vec4> controlPoints2_2;
-    controlPoints2_2.push_back(glm::vec4(0.0f, 0.16f, -5.0f, 1.0f));
-    controlPoints2_2.push_back(glm::vec4(-20.0f, 0.16f, -3.3f, 1.0f));
-    controlPoints2_2.push_back(glm::vec4(-20.0f, 0.16f, -1.6f, 1.0f));
-    controlPoints2_2.push_back(glm::vec4(0.0f, 0.16f, -1.0f, 1.0f));
+    controlPoints2_2.push_back(glm::vec4(132.0f, 0.16f, 60.9768f, 1.0f));
+    controlPoints2_2.push_back(glm::vec4(99.3377f, 0.16f, 71.0411f, 1.0f));
+    controlPoints2_2.push_back(glm::vec4(121.338f, 0.16f, 30.559f, 1.0f));
+    controlPoints2_2.push_back(glm::vec4(69.6432f, 0.16f, 43.1186f, 1.0f));
 
     std::vector<glm::vec4> controlPoints2_3;
-    controlPoints2_3.push_back(glm::vec4(0.0f, 0.16f, -5.0f, 1.0f));
-    controlPoints2_3.push_back(glm::vec4(-20.0f, 0.16f, -3.3f, 1.0f));
-    controlPoints2_3.push_back(glm::vec4(-20.0f, 0.16f, -1.6f, 1.0f));
-    controlPoints2_3.push_back(glm::vec4(0.0f, 0.16f, -1.0f, 1.0f));
+    controlPoints2_3.push_back(glm::vec4(69.6432f, 0.16f, 43.1186f, 1.0f));
+    controlPoints2_3.push_back(glm::vec4(23.2552f, 0.16f, 32.2232f, 1.0f));
+    controlPoints2_3.push_back(glm::vec4(24.7635f, 0.16f, 47.7012f, 1.0f));
+    controlPoints2_3.push_back(glm::vec4(28.857f, 0.16f, 105.02f, 1.0f));
 
     std::vector<glm::vec4> controlPoints2_4;
-    controlPoints2_4.push_back(glm::vec4(0.0f, 0.16f, -5.0f, 1.0f));
-    controlPoints2_4.push_back(glm::vec4(-20.0f, 0.16f, -3.3f, 1.0f));
-    controlPoints2_4.push_back(glm::vec4(-20.0f, 0.16f, -1.6f, 1.0f));
-    controlPoints2_4.push_back(glm::vec4(0.0f, 0.16f, -1.0f, 1.0f));
+    controlPoints2_4.push_back(glm::vec4(28.857f, 0.16f, 105.02f, 1.0f));
+    controlPoints2_4.push_back(glm::vec4(10.3733f, 0.16f, 123.0f, 1.0f));
+    controlPoints2_4.push_back(glm::vec4(5.2825f, 0.16f, 124.649f, 1.0f));
+    controlPoints2_4.push_back(glm::vec4(2.76479f, 0.16f, 69.1178f, 1.0f));
 
     std::vector<glm::vec4> controlPoints2_5;
-    controlPoints2_5.push_back(glm::vec4(0.0f, 0.16f, -5.0f, 1.0f));
-    controlPoints2_5.push_back(glm::vec4(-20.0f, 0.16f, -3.3f, 1.0f));
-    controlPoints2_5.push_back(glm::vec4(-20.0f, 0.16f, -1.6f, 1.0f));
-    controlPoints2_5.push_back(glm::vec4(0.0f, 0.16f, -1.0f, 1.0f));
+    controlPoints2_5.push_back(glm::vec4(2.76479f, 0.16f, 69.1178f, 1.0f));
+    controlPoints2_5.push_back(glm::vec4(5.32203f, 0.16f, 51.0035f, 1.0f));
+    controlPoints2_5.push_back(glm::vec4(-53.3087f, 0.16f, 59.3961f, 1.0f));
+    controlPoints2_5.push_back(glm::vec4(-52.7859f, 0.16f, 50.4402f, 1.0f));
 
     std::vector<glm::vec4> controlPoints2_6;
-    controlPoints2_6.push_back(glm::vec4(0.0f, 0.16f, -5.0f, 1.0f));
-    controlPoints2_6.push_back(glm::vec4(-20.0f, 0.16f, -3.3f, 1.0f));
-    controlPoints2_6.push_back(glm::vec4(-20.0f, 0.16f, -1.6f, 1.0f));
-    controlPoints2_6.push_back(oldPos2);
+    controlPoints2_6.push_back(glm::vec4(-52.7859f, 0.16f, 50.4402f, 1.0f));
+    controlPoints2_6.push_back(glm::vec4(-54.4495f, 0.16f, 20.2291f, 1.0f));
+    controlPoints2_6.push_back(glm::vec4(-66.0504, 0.16f, -6.89044f, 1.0f));
+    controlPoints2_6.push_back(glm::vec4(3.0f,0.16f,-2.0f,1.0f));
 
     //decor model
 
@@ -503,6 +509,7 @@ int main(int argc, char *argv[])
 #define OPPONENT 2
 #define SPHERE 3
 #define DECOR 4
+#define START 5
         //skysphere + decoracoes implementadas desenhando primeiro e limpando o zbuffer
         glm::mat4 modelSkybox=Matrix_Translate(camera_position_c.x,camera_position_c.y,camera_position_c.z)*Matrix_Scale(3.0f,3.0f,3.0f)*Matrix_Identity();
         glm::mat4 modelDecor = Matrix_Translate(camera_position_c.x+0.6f,camera_position_c.y+0.05f,camera_position_c.z-0.01f)*Matrix_Rotate_Z(PI/8)*Matrix_Rotate_Y(PI/2)*Matrix_Identity();
@@ -516,11 +523,34 @@ int main(int argc, char *argv[])
         glClear(GL_DEPTH_BUFFER_BIT);
         glEnable(GL_CULL_FACE);
 
-        if (!raceStart)
-        {
+        if (startPressed)
+        {//restart race
             glfwSetTime(0);
             raceStart = true;
+            carForward = glm::vec4(1.0f, 0.0f, 0.0f, 0.0f);
+            current_velocity = glm::vec4(0.0f, 0.0f, 0.0f, 0.0f);
+            prev_time=0;
+            carPos = glm::vec4(0.0f, 0.0f, 0.0f, 1.0f);
+            oldPos1 = glm::vec4(0.0f, 0.16f, 2.0f, 1.0f);
+            oldPos2 = glm::vec4(0.0f, 0.16f, -2.0f, 1.0f);
+            modelPlayer = Matrix_Identity();
+            modelPlayer = Matrix_Translate(carPos.x, carPos.y, carPos.z) * modelPlayer;
+            modelPlayer = Matrix_Rotate_Y(3.141592 / 2) * modelPlayer;
+            modelOponnent1 = Matrix_Identity();
+            modelOponnent1 = Matrix_Scale(0.0012, 0.0012, 0.0012) * modelOponnent1;
+            modelOponnent1 = Matrix_Rotate_Y(3.141592 / 2) * modelOponnent1;
+            modelOponnent1 = Matrix_Translate(oldPos1.x, oldPos1.y, oldPos1.z) * modelOponnent1;
+            opponnent1forward = glm::vec4(1.0f, 0.0f, 0.0f, 0.0f);
+            opponnent1pos = glm::vec4(oldPos1.x, oldPos1.y, oldPos1.z, 1.0f);
+
+            modelOponnent2 = Matrix_Identity();
+            modelOponnent2 = Matrix_Scale(0.0012, 0.0012, 0.0012) * modelOponnent2;
+            modelOponnent2 = Matrix_Rotate_Y(3.141592 / 2) * modelOponnent2;
+            modelOponnent2 = Matrix_Translate(oldPos2.x, oldPos2.y, oldPos2.z) * modelOponnent2;
+            opponnent2forward = glm::vec4(1.0f, 0.0f, 0.0f, 0.0f);
+            opponnent2pos = glm::vec4(oldPos2.x, oldPos2.y, oldPos2.z, 1.0f);
         }
+        if(raceStart){
         // definição dos controles do player e modelo de fisica
         current_velocity -= friction * delta_t * current_velocity;
         if(camType<2){
@@ -575,22 +605,27 @@ int main(int argc, char *argv[])
         modelPlayer = Matrix_Translate(frame_movement.x, frame_movement.y, frame_movement.z) * modelPlayer;
         carPos += frame_movement;
         acceleration *= 0;
-        glUniformMatrix4fv(model_uniform, 1, GL_FALSE, glm::value_ptr(modelPlayer));
-        glUniform1i(object_id_uniform, BLUE_FALCON);
-        DrawVirtualObject("blue_falcon");
+
 
         // comportamento dos oponentes
-        float bezierTime = current_time / 10;
+        float bezierTime1 = current_time / 5;
+        float bezierTime2 = current_time / 8;
         // oponnent 1
 
-        modelOponnent1 = opponentMovement(modelOponnent1, bezierTime, controlPoints1_1, controlPoints1_2,controlPoints1_3,controlPoints1_4,controlPoints1_5,controlPoints1_6, 3, opponnent1forward, opponnent1pos, oldPos1);
-        glUniformMatrix4fv(model_uniform, 1, GL_FALSE, glm::value_ptr(modelOponnent1));
-        glUniform1i(object_id_uniform, OPPONENT);
-        DrawVirtualObject("opponent");
+        modelOponnent1 = opponentMovement(modelOponnent1, bezierTime1, controlPoints1_1, controlPoints1_2,controlPoints1_3,controlPoints1_4,controlPoints1_5,controlPoints1_6, 3, opponnent1forward, opponnent1pos, oldPos1);
+
 
         // oponnent 2
 
-        modelOponnent2 = opponentMovement(modelOponnent2, bezierTime, controlPoints2_1, controlPoints2_2,controlPoints2_3,controlPoints2_4,controlPoints2_5,controlPoints2_6, 3, opponnent2forward, opponnent2pos, oldPos2);
+        modelOponnent2 = opponentMovement(modelOponnent2, bezierTime2, controlPoints2_1, controlPoints2_2,controlPoints2_3,controlPoints2_4,controlPoints2_5,controlPoints2_6, 3, opponnent2forward, opponnent2pos, oldPos2);
+
+        }
+        glUniformMatrix4fv(model_uniform, 1, GL_FALSE, glm::value_ptr(modelPlayer));
+        glUniform1i(object_id_uniform, BLUE_FALCON);
+        DrawVirtualObject("blue_falcon");
+        glUniformMatrix4fv(model_uniform, 1, GL_FALSE, glm::value_ptr(modelOponnent1));
+        glUniform1i(object_id_uniform, OPPONENT);
+        DrawVirtualObject("opponent");
         glUniformMatrix4fv(model_uniform, 1, GL_FALSE, glm::value_ptr(modelOponnent2));
         glUniform1i(object_id_uniform, OPPONENT);
         DrawVirtualObject("opponent");
@@ -602,7 +637,13 @@ int main(int argc, char *argv[])
         glUniformMatrix4fv(model_uniform, 1, GL_FALSE, glm::value_ptr(model));
         glUniform1i(object_id_uniform, PLANE);
         DrawVirtualObject("Track");
-
+        model = Matrix_Identity();
+        model = Matrix_Rotate_Y(-PI / 2) * model;
+        model = Matrix_Scale(1.0f, 1.0f, 1.0f) * model;
+        model = Matrix_Translate(2.0f, 1.0f, 0.0f) * model;
+        glUniformMatrix4fv(model_uniform, 1, GL_FALSE, glm::value_ptr(model));
+        glUniform1i(object_id_uniform, START);
+        DrawVirtualObject("Starting_Line");
 
 
         glfwSwapBuffers(window);
@@ -666,38 +707,7 @@ void LoadTextureImage(const char *filename)
 
     g_NumLoadedTextures += 1;
 }
-//FONTE https://learnopengl.com/Advanced-OpenGL/Cubemaps
-unsigned int loadCubemap(std::vector<std::string> faces)
-{
-    unsigned int textureID;
-    glGenTextures(1, &textureID);
-    glBindTexture(GL_TEXTURE_CUBE_MAP, textureID);
 
-    int width, height, nrChannels;
-    for (unsigned int i = 0; i < faces.size(); i++)
-    {
-        unsigned char *data = stbi_load(faces[i].c_str(), &width, &height, &nrChannels, 0);
-        if (data)
-        {
-            glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i,
-                         0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data
-            );
-            stbi_image_free(data);
-        }
-        else
-        {
-            std::cout << "Cubemap tex failed to load at path: " << faces[i] << std::endl;
-            stbi_image_free(data);
-        }
-    }
-    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
-
-    return textureID;
-}
 // Função que desenha um objeto armazenado em g_VirtualScene. Veja definição
 // dos objetos na função BuildTrianglesAndAddToVirtualScene().
 void DrawVirtualObject(const char *object_name)
@@ -779,6 +789,7 @@ void LoadShadersFromFiles()
     glUniform1i(glGetUniformLocation(program_id, "TextureImage1"), 1);
     glUniform1i(glGetUniformLocation(program_id, "TextureImage2"), 2);
     glUniform1i(glGetUniformLocation(program_id, "TextureImage3"), 3);
+    glUniform1i(glGetUniformLocation(program_id, "TextureImage4"), 4);
     glUseProgram(0);
 }
 
@@ -1406,6 +1417,20 @@ void KeyCallback(GLFWwindow *window, int key, int scancode, int action, int mod)
         else if (action == GLFW_RELEASE)
         {
             ctrlPressed = false;
+        }
+        else if (action == GLFW_REPEAT)
+        {
+        }
+    }
+    if (key == GLFW_KEY_ENTER)
+    {
+        if (action == GLFW_PRESS)
+        {
+            startPressed = true;
+        }
+        else if (action == GLFW_RELEASE)
+        {
+            startPressed = false;
         }
         else if (action == GLFW_REPEAT)
         {

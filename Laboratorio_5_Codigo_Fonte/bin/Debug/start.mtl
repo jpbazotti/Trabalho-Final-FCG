@@ -1,0 +1,62 @@
+# Blender 3.3.0 MTL File: 'None'
+# www.blender.org
+
+newmtl Ad_1
+Ns 20.000006
+Ka 1.000000 1.000000 1.000000
+Ks 0.000000 0.000000 0.000000
+Ke 0.000000 0.000000 0.000000
+Ni 1.450000
+d 1.000000
+illum 1
+map_Kd C:/Users/João/Desktop/starting_line_texture_2.png
+
+newmtl Ad_2
+Ns 20.000006
+Ka 1.000000 1.000000 1.000000
+Ks 0.000000 0.000000 0.000000
+Ke 0.000000 0.000000 0.000000
+Ni 1.450000
+d 1.000000
+illum 1
+map_Kd C:/Users/João/Desktop/starting_line_texture_3.fw.png
+
+newmtl Start_Texture
+Ns 20.000006
+Ka 1.000000 1.000000 1.000000
+Ks 0.000000 0.000000 0.000000
+Ke 0.000000 0.000000 0.000000
+Ni 1.450000
+d 1.000000
+illum 1
+map_Kd C:/Users/João/Desktop/starting_line_texture_1.png
+
+newmtl Starting_Sign_Mat_1
+Ns 20.000006
+Ka 1.000000 1.000000 1.000000
+Kd 0.000000 0.000000 0.258824
+Ks 0.000000 0.000000 0.000000
+Ke 0.000000 0.000000 0.000000
+Ni 1.450000
+d 1.000000
+illum 1
+
+newmtl Starting_Sign_Mat_2
+Ns 20.000006
+Ka 1.000000 1.000000 1.000000
+Kd 0.321569 0.000000 0.000000
+Ks 0.000000 0.000000 0.000000
+Ke 0.000000 0.000000 0.000000
+Ni 1.450000
+d 1.000000
+illum 1
+
+newmtl Starting_Sign_Mat_3
+Ns 20.000006
+Ka 1.000000 1.000000 1.000000
+Kd 0.047059 0.047059 0.047059
+Ks 0.000000 0.000000 0.000000
+Ke 0.000000 0.000000 0.000000
+Ni 1.450000
+d 1.000000
+illum 1

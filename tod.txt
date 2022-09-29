@@ -1,10 +1,8 @@
 today:
-new path for opponents
+new path for opponent2
 
 
 future:
-
-back to curve
 car strafe (mouse buttons)
 collision
 win condition

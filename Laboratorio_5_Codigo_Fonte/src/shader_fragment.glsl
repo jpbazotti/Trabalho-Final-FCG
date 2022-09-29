@@ -27,7 +27,7 @@ uniform mat4 projection;
 #define OPPONENT  2
 #define SPHERE 3
 #define DECOR 4
-
+#define START 5
 uniform int object_id;
 
 // Parâmetros da axis-aligned bounding box (AABB) do modelo
@@ -39,7 +39,7 @@ uniform sampler2D TextureImage0;
 uniform sampler2D TextureImage1;
 uniform sampler2D TextureImage2;
 uniform sampler2D TextureImage3;
-uniform samplerCube skybox;
+uniform sampler2D TextureImage4;
 // O valor de saída ("out") de um Fragment Shader é a cor final do fragmento.
 out vec4 color;
 
@@ -79,21 +79,7 @@ void main()
     float U = 0.0;
     float V = 0.0;
 
-    if ( object_id == BLUE_FALCON || object_id==OPPONENT || object_id == PLANE)
-    {
-        // PREENCHA AQUI as coordenadas de textura do coelho, computadas com
-        // projeção planar XY em COORDENADAS DO MODELO. Utilize como referência
-        // o slides 99-104 do documento Aula_20_Mapeamento_de_Texturas.pdf,
-        // e também use as variáveis min*/max* definidas abaixo para normalizar
-        // as coordenadas de textura U e V dentro do intervalo [0,1]. Para
-        // tanto, veja por exemplo o mapeamento da variável 'p_v' utilizando
-        // 'h' no slides 158-160 do documento Aula_20_Mapeamento_de_Texturas.pdf.
-        // Veja também a Questão 4 do Questionário 4 no Moodle.
 
- 
-        U = texcoords.x;
-        V = texcoords.y;
-    }
      if ( object_id == SPHERE )
     {
         vec4 bbox_center = (bbox_min + bbox_max) / 2.0;
@@ -103,13 +89,16 @@ void main()
         float phi = asin(pvec.y);
         U = 1-(theta+M_PI)/(2*M_PI);
         V = (phi+M_PI_2)/M_PI;  
+    }else{
+        U = texcoords.x;
+        V = texcoords.y;
     }
 
     // Obtemos a refletância difusa a partir da leitura da imagem TextureImage0
     vec3 Kd0 = texture(TextureImage0, vec2(U,V)).rgb;
     vec3 Kd1 = texture(TextureImage1, vec2(U,V)).rgb;
     vec3 Kd2 = texture(TextureImage2, vec2(U,V)).rgb;
-    vec3 Kd3 = texture(TextureImage3, vec2(U,V)).rgb;
+    vec3 Kd3 = texture(TextureImage4, vec2(U,V)).rgb;
     vec3 I = vec3(1.0,0.61,0.43); 
 
     // Equação de Iluminação
@@ -135,6 +124,10 @@ void main()
         vec3 ambient_term = Ka*Ia; 
 
         color.rgb = vec3(0.8,0.4,0.08) * lambert2+phong_specular_term+ambient_term;
+    }else if(object_id==START){
+        vec4 l2 = normalize(vec4(-1.0,5.0,0.0,0.0));
+        vec3 lambert2 = I*max(0,dot(n,l2));
+        color.rgb = Kd3*lambert2;
     }
     
     // NOTE: Se você quiser fazer o rendering de objetos transparentes, é
