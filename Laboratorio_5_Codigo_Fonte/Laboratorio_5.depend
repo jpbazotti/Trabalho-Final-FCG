@@ -1594,7 +1594,7 @@
 	<fstream>
 	<sstream>
 
-1664410208 source:c:\users\joão\desktop\f-zero\trabalho-final-fcg\laboratorio_5_codigo_fonte\src\main.cpp
+1664475072 source:c:\users\joão\desktop\f-zero\trabalho-final-fcg\laboratorio_5_codigo_fonte\src\main.cpp
 	<cmath>
 	<cstdio>
 	<cstdlib>
@@ -1887,7 +1887,7 @@
 	<glm/vec4.hpp>
 	<glm/gtc/matrix_transform.hpp>
 
-1663259100 c:\users\joão\desktop\f-zero\trabalho-final-fcg\laboratorio_5_codigo_fonte\include\bezier.h
+1664472798 c:\users\joão\desktop\f-zero\trabalho-final-fcg\laboratorio_5_codigo_fonte\include\bezier.h
 
 1663268464 c:\users\joão\desktop\f-zero\trabalho-final-fcg\laboratorio_5_codigo_fonte\include\textrendering.h
 	<string>
@@ -1898,7 +1898,7 @@
 	<glm/vec4.hpp>
 	<glm/gtc/type_ptr.hpp>
 
-1664407513 c:\users\joão\desktop\f-zero\trabalho-final-fcg\laboratorio_5_codigo_fonte\include\opponent.h
+1664475335 c:\users\joão\desktop\f-zero\trabalho-final-fcg\laboratorio_5_codigo_fonte\include\opponent.h
 	<glm/mat4x4.hpp>
 	<glm/vec4.hpp>
 	<glm/gtc/matrix_transform.hpp>

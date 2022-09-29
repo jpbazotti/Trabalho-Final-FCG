@@ -2,7 +2,7 @@
 #include <glm/vec4.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 // returns the opponent model matrix, also updates oldposition, forward and position
-glm::mat4 opponentMovement(glm::mat4 model, float bezierTime, std::vector<glm::vec4> controlPoints1, std::vector<glm::vec4> controlPoints2, int degree, glm::vec4 &forward, glm::vec4 &pos, glm::vec4 &oldpos)
+glm::mat4 opponentMovement(glm::mat4 model, float bezierTime, std::vector<glm::vec4> controlPoints1, std::vector<glm::vec4> controlPoints2,std::vector<glm::vec4> controlPoints3,std::vector<glm::vec4> controlPoints4,std::vector<glm::vec4> controlPoints5,std::vector<glm::vec4> controlPoints6, int degree, glm::vec4 &forward, glm::vec4 &pos, glm::vec4 &oldpos)
 {
     glm::mat4 returnModel = model;
     glm::vec4 BezierPoint;
@@ -13,6 +13,20 @@ glm::mat4 opponentMovement(glm::mat4 model, float bezierTime, std::vector<glm::v
     else if(bezierTime<=2)
     {
         BezierPoint = Bezier(controlPoints2, degree, bezierTime-1);
+    }
+    else if(bezierTime<=3)
+    {
+        BezierPoint = Bezier(controlPoints3, degree, bezierTime-2);
+    }
+    else if(bezierTime<=4)
+    {
+        BezierPoint = Bezier(controlPoints4, degree, bezierTime-3);
+    }else if(bezierTime<=5)
+    {
+        BezierPoint = Bezier(controlPoints5, degree, bezierTime-4);
+    }else if(bezierTime<=6)
+    {
+        BezierPoint = Bezier(controlPoints6, degree, bezierTime-5);
     }
     else{
         return returnModel;

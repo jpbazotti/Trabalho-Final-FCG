@@ -207,7 +207,7 @@ int main(int argc, char *argv[])
     // Criamos uma janela do sistema operacional, com 800 colunas e 600 linhas
     // de pixels, e com título "INF01047 ...".
     GLFWwindow *window;
-    window = glfwCreateWindow(800, 600, "INF01047 - 00323915 - Izaias Saturnino de Lima Neto e João Pedro Lopes Bazotti", NULL, NULL);
+    window = glfwCreateWindow(800, 600, "INF01047 - 00326872 e 00323915 - Izaias Saturnino de Lima Neto e João Pedro Lopes Bazotti", NULL, NULL);
     if (!window)
     {
         glfwTerminate();
@@ -252,7 +252,7 @@ int main(int argc, char *argv[])
     LoadShadersFromFiles();
 
     // Carregamos as imagens para serem utilizadas como textura
-    LoadTextureImage("../../data/op.png"); 
+    LoadTextureImage("../../data/op.png");
     LoadTextureImage("../../data/BF.png");
     LoadTextureImage("../../data/retro.png");
     LoadTextureImage("../../data/track.png");
@@ -333,18 +333,41 @@ int main(int argc, char *argv[])
     glm::vec4 opponnent2forward = glm::vec4(1.0f, 0.0f, 0.0f, 0.0f);
     glm::vec4 opponnent2pos = glm::vec4(oldPos2.x, oldPos2.y, oldPos2.z, 1.0f);
 
-    // bezier control points
+    // bezier control points1
     std::vector<glm::vec4> controlPoints1_1;
     controlPoints1_1.push_back(oldPos1);
-    controlPoints1_1.push_back(glm::vec4(30.0f, 0.16f, 1.6f, 1.0f));
-    controlPoints1_1.push_back(glm::vec4(30.0f, 0.16f, 3.3f, 1.0f));
-    controlPoints1_1.push_back(glm::vec4(0.0f, 0.16f, 5.0f, 1.0f));
+    controlPoints1_1.push_back(glm::vec4(156.483f, 0.16f, -3.52993f, 1.0f));
+    controlPoints1_1.push_back(glm::vec4(134.85f, 0.16f, -6.45085f, 1.0f));
+    controlPoints1_1.push_back(glm::vec4(129.0f, 0.16f, 60.9768f, 1.0f));
 
     std::vector<glm::vec4> controlPoints1_2;
-    controlPoints1_2.push_back(glm::vec4(0.0f, 0.16f, 5.0f, 1.0f));
-    controlPoints1_2.push_back(glm::vec4(-20.0f, 0.16f, 3.3f, 1.0f));
-    controlPoints1_2.push_back(glm::vec4(-20.0f, 0.16f, 1.6f, 1.0f));
-    controlPoints1_2.push_back(glm::vec4(0.0f, 0.16f, 1.0f, 1.0f));
+    controlPoints1_2.push_back(glm::vec4(129.0f, 0.16f, 60.9768f, 1.0f));
+    controlPoints1_2.push_back(glm::vec4(99.3377f, 0.16f, 71.0411f, 1.0f));
+    controlPoints1_2.push_back(glm::vec4(121.338f, 0.16f, 30.559f, 1.0f));
+    controlPoints1_2.push_back(glm::vec4(69.6432f, 0.16f, 41.1186f, 1.0f));
+
+    std::vector<glm::vec4> controlPoints1_3;
+    controlPoints1_3.push_back(glm::vec4(69.6432f, 0.16f, 41.1186f, 1.0f));
+    controlPoints1_3.push_back(glm::vec4(23.2552f, 0.16f, 32.2232f, 1.0f));
+    controlPoints1_3.push_back(glm::vec4(24.7635f, 0.16f, 47.7012f, 1.0f));
+    controlPoints1_3.push_back(glm::vec4(26.857f, 0.16f, 105.02f, 1.0f));
+
+    std::vector<glm::vec4> controlPoints1_4;
+    controlPoints1_4.push_back(glm::vec4(26.857f, 0.16f, 105.02f, 1.0f));
+    controlPoints1_4.push_back(glm::vec4(10.3733f, 0.16f, 123.0f, 1.0f));
+    controlPoints1_4.push_back(glm::vec4(5.2825f, 0.16f, 124.649f, 1.0f));
+    controlPoints1_4.push_back(glm::vec4(2.76479f, 0.16f, 65.1178f, 1.0f));
+    std::vector<glm::vec4> controlPoints1_5;
+    controlPoints1_5.push_back(glm::vec4(2.76479f, 0.16f, 65.1178f, 1.0f));
+    controlPoints1_5.push_back(glm::vec4(5.32203f, 0.16f, 51.0035f, 1.0f));
+    controlPoints1_5.push_back(glm::vec4(-53.3087f, 0.16f, 59.3961f, 1.0f));
+    controlPoints1_5.push_back(glm::vec4(-49.7859f, 0.16f, 50.4402f, 1.0f));
+    std::vector<glm::vec4> controlPoints1_6;
+    controlPoints1_6.push_back(glm::vec4(-49.7859f, 0.16f, 50.4402f, 1.0f));
+    controlPoints1_6.push_back(glm::vec4(-54.4495f, 0.16f, 20.2291f, 1.0f));
+    controlPoints1_6.push_back(glm::vec4(-66.0504, 0.16f, -13.1143f, 1.0f));
+    controlPoints1_6.push_back(glm::vec4(2.0f,0.16f,1.0f,1.0f));
+    // bezier control points2
 
     std::vector<glm::vec4> controlPoints2_1;
     controlPoints2_1.push_back(oldPos2);
@@ -358,6 +381,30 @@ int main(int argc, char *argv[])
     controlPoints2_2.push_back(glm::vec4(-20.0f, 0.16f, -1.6f, 1.0f));
     controlPoints2_2.push_back(glm::vec4(0.0f, 0.16f, -1.0f, 1.0f));
 
+    std::vector<glm::vec4> controlPoints2_3;
+    controlPoints2_3.push_back(glm::vec4(0.0f, 0.16f, -5.0f, 1.0f));
+    controlPoints2_3.push_back(glm::vec4(-20.0f, 0.16f, -3.3f, 1.0f));
+    controlPoints2_3.push_back(glm::vec4(-20.0f, 0.16f, -1.6f, 1.0f));
+    controlPoints2_3.push_back(glm::vec4(0.0f, 0.16f, -1.0f, 1.0f));
+
+    std::vector<glm::vec4> controlPoints2_4;
+    controlPoints2_4.push_back(glm::vec4(0.0f, 0.16f, -5.0f, 1.0f));
+    controlPoints2_4.push_back(glm::vec4(-20.0f, 0.16f, -3.3f, 1.0f));
+    controlPoints2_4.push_back(glm::vec4(-20.0f, 0.16f, -1.6f, 1.0f));
+    controlPoints2_4.push_back(glm::vec4(0.0f, 0.16f, -1.0f, 1.0f));
+
+    std::vector<glm::vec4> controlPoints2_5;
+    controlPoints2_5.push_back(glm::vec4(0.0f, 0.16f, -5.0f, 1.0f));
+    controlPoints2_5.push_back(glm::vec4(-20.0f, 0.16f, -3.3f, 1.0f));
+    controlPoints2_5.push_back(glm::vec4(-20.0f, 0.16f, -1.6f, 1.0f));
+    controlPoints2_5.push_back(glm::vec4(0.0f, 0.16f, -1.0f, 1.0f));
+
+    std::vector<glm::vec4> controlPoints2_6;
+    controlPoints2_6.push_back(glm::vec4(0.0f, 0.16f, -5.0f, 1.0f));
+    controlPoints2_6.push_back(glm::vec4(-20.0f, 0.16f, -3.3f, 1.0f));
+    controlPoints2_6.push_back(glm::vec4(-20.0f, 0.16f, -1.6f, 1.0f));
+    controlPoints2_6.push_back(oldPos2);
+
     //decor model
 
 
@@ -367,7 +414,7 @@ int main(int argc, char *argv[])
     while (!glfwWindowShouldClose(window))
     {
         glDisable(GL_CULL_FACE);
-     
+
         glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
 
 
@@ -399,9 +446,9 @@ int main(int argc, char *argv[])
             {
                 camera_position_c = Matrix_Translate(carPos.x, carPos.y, carPos.z) * c;
             }
-            glm::vec4 camera_lookat_l = carPos; 
+            glm::vec4 camera_lookat_l = carPos;
             glm::vec4 camera_view_vector = camera_lookat_l - camera_position_c;
-            glm::vec4 camera_up_vector = glm::vec4(0.0f, 1.0f, 0.0f, 0.0f); 
+            glm::vec4 camera_up_vector = glm::vec4(0.0f, 1.0f, 0.0f, 0.0f);
 
 
             view = Matrix_Camera_View(camera_position_c, camera_view_vector, camera_up_vector);
@@ -444,8 +491,8 @@ int main(int argc, char *argv[])
         glm::mat4 projection;
 
 
-        float nearplane = -0.1f; 
-        float farplane = -200.0f; 
+        float nearplane = -0.1f;
+        float farplane = -200.0f;
         float field_of_view = (PI / 3.0f)-(norm(current_velocity)*0.01f);
         projection = Matrix_Perspective(field_of_view, g_ScreenRatio, nearplane, farplane);
         glUniformMatrix4fv(view_uniform, 1, GL_FALSE, glm::value_ptr(view));
@@ -468,7 +515,6 @@ int main(int argc, char *argv[])
         DrawVirtualObject("decor");
         glClear(GL_DEPTH_BUFFER_BIT);
         glEnable(GL_CULL_FACE);
-
 
         if (!raceStart)
         {
@@ -534,22 +580,22 @@ int main(int argc, char *argv[])
         DrawVirtualObject("blue_falcon");
 
         // comportamento dos oponentes
-        float bezierTime = current_time / 2;
+        float bezierTime = current_time / 10;
         // oponnent 1
 
-        modelOponnent1 = opponentMovement(modelOponnent1, bezierTime, controlPoints1_1, controlPoints1_2, 3, opponnent1forward, opponnent1pos, oldPos1);
+        modelOponnent1 = opponentMovement(modelOponnent1, bezierTime, controlPoints1_1, controlPoints1_2,controlPoints1_3,controlPoints1_4,controlPoints1_5,controlPoints1_6, 3, opponnent1forward, opponnent1pos, oldPos1);
         glUniformMatrix4fv(model_uniform, 1, GL_FALSE, glm::value_ptr(modelOponnent1));
         glUniform1i(object_id_uniform, OPPONENT);
         DrawVirtualObject("opponent");
 
         // oponnent 2
 
-        modelOponnent2 = opponentMovement(modelOponnent2, bezierTime, controlPoints2_1, controlPoints2_2, 3, opponnent2forward, opponnent2pos, oldPos2);
+        modelOponnent2 = opponentMovement(modelOponnent2, bezierTime, controlPoints2_1, controlPoints2_2,controlPoints2_3,controlPoints2_4,controlPoints2_5,controlPoints2_6, 3, opponnent2forward, opponnent2pos, oldPos2);
         glUniformMatrix4fv(model_uniform, 1, GL_FALSE, glm::value_ptr(modelOponnent2));
         glUniform1i(object_id_uniform, OPPONENT);
         DrawVirtualObject("opponent");
         // Pista
-        glm::mat4 model = Matrix_Identity(); 
+        glm::mat4 model = Matrix_Identity();
         model = Matrix_Rotate_Y(-PI / 2) * model;
         model = Matrix_Scale(8.0f, 8.0f, 8.0f) * model;
         model = Matrix_Translate(0.0f, -0.8f, 0.0f) * model;

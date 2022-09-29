@@ -1,14 +1,14 @@
 glm::vec4 Bezier(std::vector<glm::vec4> controlPoints, int degree, float point)
 {
-    std::vector<glm::vec4> oldPoints = controlPoints;
-    for (int i = 0; i <= degree; i++)
+    std::vector<glm::vec4> points = controlPoints;
+    int i = degree;
+    while (i>0)
     {
-        std::vector<glm::vec4> newPoints;
-        for (int j = 0; j < degree-i; j++)
+        for (int j = 0; j < i; j++)
         {
-            newPoints.push_back(oldPoints[i] + point * (oldPoints[i + 1] - oldPoints[i]));
+            points.at(j)=(points[j] + point * (points[j + 1] - points[j]));
         }
-        oldPoints = newPoints;
+        i--;
     }
-    return oldPoints[0];
+    return points[0];
 }
