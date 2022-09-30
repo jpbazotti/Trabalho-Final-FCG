@@ -423,6 +423,13 @@ int main(int argc, char *argv[])
     bool finished=false;
     bool updateCamPos;
 
+    //car lateral movement
+
+    glm::vec4 lateral_velocity = glm::vec4(0.0f, 0.0f, 0.0f, 0.0f);
+    glm::vec4 up_vector = glm::vec4(0.0f, 1.0f, 0.0f, 0.0f);
+    glm::vec4 carLeft = crossproduct(up_vector, carForward);
+    glm::vec4 carRight = -carLeft;
+
     while (!glfwWindowShouldClose(window))
     {
         glDisable(GL_CULL_FACE);
@@ -505,7 +512,7 @@ int main(int argc, char *argv[])
 
         float nearplane = -0.1f;
         float farplane = -200.0f;
-        float field_of_view = (PI / 3.0f)-(norm(current_velocity)*0.01f);
+        float field_of_view = (PI / 3.0f)-(norm(current_velocity)*0.002f);
         projection = Matrix_Perspective(field_of_view, g_ScreenRatio, nearplane, farplane);
         glUniformMatrix4fv(view_uniform, 1, GL_FALSE, glm::value_ptr(view));
         glUniformMatrix4fv(projection_uniform, 1, GL_FALSE, glm::value_ptr(projection));
@@ -597,6 +604,17 @@ int main(int argc, char *argv[])
             carForward = Matrix_Rotate_Y(-rotation * delta_t) * carForward;
             modelPlayer = Matrix_Translate(carPos.x, carPos.y, carPos.z) * Matrix_Rotate_Y(-rotation * delta_t) * Matrix_Translate(-carPos.x, -carPos.y, -carPos.z) * modelPlayer;
         }
+
+        lateral_velocity = glm::vec4(0.0f, 0.0f, 0.0f, 0.0f);
+        carLeft = crossproduct(up_vector, carForward);
+        carRight = -carLeft;
+        if(g_LeftMouseButtonPressed){
+            lateral_velocity += carLeft * max_velocity * 30.0f * delta_t;
+        }
+        if(g_RightMouseButtonPressed){
+            lateral_velocity += carRight * max_velocity * 30.0f * delta_t;
+        }
+
         }
 
         if (norm(acceleration) == 0 && norm(current_velocity) < 0.1)
@@ -613,7 +631,7 @@ int main(int argc, char *argv[])
             current_velocity = norm(current_velocity) * carForward + acceleration;
         }
 
-        frame_movement = current_velocity * delta_t;
+        frame_movement = (current_velocity + lateral_velocity) * delta_t;
         modelPlayer = Matrix_Translate(frame_movement.x, frame_movement.y, frame_movement.z) * modelPlayer;
         carPos += frame_movement;
         acceleration *= 0;
