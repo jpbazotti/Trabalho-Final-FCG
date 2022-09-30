@@ -1594,7 +1594,7 @@
 	<fstream>
 	<sstream>
 
-1664561242 source:c:\users\joão\desktop\f-zero\trabalho-final-fcg\laboratorio_5_codigo_fonte\src\main.cpp
+1664564749 source:c:\users\joão\desktop\f-zero\trabalho-final-fcg\laboratorio_5_codigo_fonte\src\main.cpp
 	<cmath>
 	<cstdio>
 	<cstdlib>
@@ -1879,7 +1879,7 @@
 1661356587 c:\users\joão\desktop\f-zero\trabalho-final-fcg\laboratorio_5_codigo_fonte\include\glm\gtc\type_ptr.inl
 	<cstring>
 
-1664410611 c:\users\joão\desktop\f-zero\trabalho-final-fcg\laboratorio_5_codigo_fonte\include\matrices.h
+1664565260 c:\users\joão\desktop\f-zero\trabalho-final-fcg\laboratorio_5_codigo_fonte\include\matrices.h
 	<cstdio>
 	<cstdlib>
 	<glm/mat4x4.hpp>
@@ -1901,4 +1901,11 @@
 	<glm/mat4x4.hpp>
 	<glm/vec4.hpp>
 	<glm/gtc/matrix_transform.hpp>
+
+1664563704 c:\users\joão\desktop\f-zero\trabalho-final-fcg\laboratorio_5_codigo_fonte\include\collisions.h
+	<glm/vec4.hpp>
+
+1664565165 source:c:\users\joão\desktop\f-zero\trabalho-final-fcg\laboratorio_5_codigo_fonte\src\collisions.cpp
+	<glm/vec4.hpp>
+	"matrices.h"
 
