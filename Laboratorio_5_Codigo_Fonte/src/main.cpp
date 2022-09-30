@@ -83,10 +83,10 @@ void PopMatrix(glm::mat4 &M);
 
 // Declaração de várias funções utilizadas em main().  Essas estão definidas
 // logo após a definição de main() neste arquivo.
-void BuildTrianglesAndAddToVirtualScene(ObjModel *);                         // Constrói representação de um ObjModel como malha de triângulos para renderização
-void ComputeNormals(ObjModel *model);                                        // Computa normais de um ObjModel, caso não existam.
-void LoadShadersFromFiles();                                                 // Carrega os shaders de vértice e fragmento, criando um programa de GPU
-void LoadTextureImage(const char *filename);                                 // Função que carrega imagens de textura
+void BuildTrianglesAndAddToVirtualScene(ObjModel *); // Constrói representação de um ObjModel como malha de triângulos para renderização
+void ComputeNormals(ObjModel *model);                // Computa normais de um ObjModel, caso não existam.
+void LoadShadersFromFiles();                         // Carrega os shaders de vértice e fragmento, criando um programa de GPU
+void LoadTextureImage(const char *filename);         // Função que carrega imagens de textura
 
 void DrawVirtualObject(const char *object_name);                             // Desenha um objeto armazenado em g_VirtualScene
 GLuint LoadShader_Vertex(const char *filename);                              // Carrega um vertex shader
@@ -96,10 +96,12 @@ GLuint CreateGpuProgram(GLuint vertex_shader_id, GLuint fragment_shader_id); // 
 void PrintObjModelInfo(ObjModel *);                                          // Função para debugging
 
 void TextRendering_Init();
-float TextRendering_LineHeight(GLFWwindow* window);
-float TextRendering_CharWidth(GLFWwindow* window);
-void TextRendering_PrintString(GLFWwindow* window, const std::string &str, float x, float y, float scale = 1.0f);
+float TextRendering_LineHeight(GLFWwindow *window);
+float TextRendering_CharWidth(GLFWwindow *window);
+void TextRendering_PrintString(GLFWwindow *window, const std::string &str, float x, float y, float scale = 1.0f);
 bool spheres_collision(glm::vec4 hitbox1Center, float hitbox1Radius, glm::vec4 hitbox2Center, float hitbox2Radius);
+void printBoost(float power,float pad,GLFWwindow* window);
+
 // Funções callback para comunicação com o sistema operacional e interação do
 // usuário. Veja mais comentários nas definições das mesmas, abaixo.
 void FramebufferSizeCallback(GLFWwindow *window, int width, int height);
@@ -108,8 +110,6 @@ void KeyCallback(GLFWwindow *window, int key, int scancode, int action, int mode
 void MouseButtonCallback(GLFWwindow *window, int button, int action, int mods);
 void CursorPosCallback(GLFWwindow *window, double xpos, double ypos);
 void ScrollCallback(GLFWwindow *window, double xoffset, double yoffset);
-
-
 
 // Definimos uma estrutura que armazenará dados necessários para renderizar
 // cada objeto da cena virtual.
@@ -152,20 +152,20 @@ bool wPressed = false;
 bool aPressed = false;
 bool sPressed = false;
 bool dPressed = false;
-bool ctrlPressed=false;
-bool spacePressed=false;
-bool startPressed=false;
-bool hasRotatedL=false;
-bool hasRotatedR=false;
+bool ctrlPressed = false;
+bool spacePressed = false;
+bool startPressed = false;
+bool hasRotatedL = false;
+bool hasRotatedR = false;
 // Variáveis que definem a câmera em coordenadas esféricas, controladas pelo
 // usuário através do mouse (veja função CursorPosCallback()). A posição
 // efetiva da câmera é calculada dentro da função main(), dentro do loop de
 // renderização.
-float g_CameraTheta = -PI/2;    // Ângulo no plano ZX em relação ao eixo Z
+float g_CameraTheta = -PI / 2; // Ângulo no plano ZX em relação ao eixo Z
 float g_CameraPhi = 0.0f;      // Ângulo em relação ao eixo Y
 float g_CameraDistance = 3.5f; // Distância da câmera para a origem
-float camSpeed=10.0f;
-glm::vec4 c=glm::vec4(0.0f,0.0f,0.0f,1.0f);
+float camSpeed = 10.0f;
+glm::vec4 c = glm::vec4(0.0f, 0.0f, 0.0f, 1.0f);
 
 // Variável que controla o tipo de camera.
 int camType = 0;
@@ -185,8 +185,6 @@ GLint bbox_max_uniform;
 
 // Número de texturas carregadas pela função LoadTextureImage()
 GLuint g_NumLoadedTextures = 0;
-
-
 
 int main(int argc, char *argv[])
 {
@@ -267,7 +265,6 @@ int main(int argc, char *argv[])
     LoadTextureImage("../../data/track.png");
     LoadTextureImage("../../data/start.png");
 
-
     // Construímos a representação de objetos geométricos através de malhas de triângulos
 
     ObjModel carmodel("../../data/opponent.obj");
@@ -321,12 +318,13 @@ int main(int argc, char *argv[])
     glm::vec4 current_velocity = glm::vec4(0.0f, 0.0f, 0.0f, 0.0f);
     glm::vec4 acceleration = glm::vec4(0.0f, 0.0f, 0.0f, 0.0f);
     glm::vec4 frame_movement = glm::vec4(0.0f, 0.0f, 0.0f, 0.0f);
+    float boostpower = 100.0f;
+    float boostTime = 0;
+    float stunTime = 0;
 
     // player hitbox
     // sphere hitbox
-    float playerHitboxRadius = 3.0f;
-    // sphere offset from carPos
-    glm::vec4 playerHitboxOffset = glm::vec4(0.0f, 0.0f, 0.0f, 0.0f);
+    float playerHitboxRadius = 0.8f;
 
     // initial model manipulation
     modelPlayer = Matrix_Identity();
@@ -347,9 +345,8 @@ int main(int argc, char *argv[])
 
     // player hitbox
     // sphere hitbox
-    float opponnent1HitboxRadius = 3.0f;
-    // sphere offset from carPos
-    glm::vec4 opponnent1HitboxOffset = glm::vec4(0.0f, 0.0f, 0.0f, 0.0f);
+    float opponnent1HitboxRadius = 0.8f;
+    float opponnent2HitboxRadius = 0.8f;
 
     glm::mat4 modelOponnent2;
     modelOponnent2 = Matrix_Identity();
@@ -392,7 +389,7 @@ int main(int argc, char *argv[])
     controlPoints1_6.push_back(glm::vec4(-49.7859f, 0.16f, 50.4402f, 1.0f));
     controlPoints1_6.push_back(glm::vec4(-54.4495f, 0.16f, 20.2291f, 1.0f));
     controlPoints1_6.push_back(glm::vec4(-66.0504, 0.16f, -13.1143f, 1.0f));
-    controlPoints1_6.push_back(glm::vec4(3.0f,0.16f,2.0f,1.0f));
+    controlPoints1_6.push_back(glm::vec4(3.0f, 0.16f, 2.0f, 1.0f));
     // bezier control points2
 
     std::vector<glm::vec4> controlPoints2_1;
@@ -429,24 +426,22 @@ int main(int argc, char *argv[])
     controlPoints2_6.push_back(glm::vec4(-52.7859f, 0.16f, 50.4402f, 1.0f));
     controlPoints2_6.push_back(glm::vec4(-54.4495f, 0.16f, 20.2291f, 1.0f));
     controlPoints2_6.push_back(glm::vec4(-66.0504, 0.16f, -6.89044f, 1.0f));
-    controlPoints2_6.push_back(glm::vec4(3.0f,0.16f,-2.0f,1.0f));
+    controlPoints2_6.push_back(glm::vec4(3.0f, 0.16f, -2.0f, 1.0f));
 
-    //decor model
-
+    // decor model
 
     bool raceStart = false;
     bool lost = false;
     bool checkpoint = false;
-    bool finished=false;
+    bool finished = false;
     bool updateCamPos;
 
-    //car lateral movement
+    // car lateral movement
 
     glm::vec4 lateral_velocity = glm::vec4(0.0f, 0.0f, 0.0f, 0.0f);
     glm::vec4 up_vector = glm::vec4(0.0f, 1.0f, 0.0f, 0.0f);
     glm::vec4 carLeft = crossproduct(up_vector, carForward);
     glm::vec4 carRight = -carLeft;
-
     while (!glfwWindowShouldClose(window))
     {
         float pad = TextRendering_LineHeight(window);
@@ -454,12 +449,9 @@ int main(int argc, char *argv[])
 
         glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
 
-
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-
         glUseProgram(program_id);
-
 
         glm::mat4 view;
         float current_time = (float)glfwGetTime();
@@ -468,16 +460,21 @@ int main(int argc, char *argv[])
         glm::vec4 camera_position_c;
         if (camType < 2)
         {
-            updateCamPos=true;
+            updateCamPos = true;
             float r = g_CameraDistance;
             float y = r * sin(g_CameraPhi);
             float z = r * cos(g_CameraPhi) * cos(g_CameraTheta);
             float x = r * cos(g_CameraPhi) * sin(g_CameraTheta);
             c = glm::vec4(x, y, z, 1.0f);
-            //cameras dinamica e lookat
+            // cameras dinamica e lookat
             if (camType == 0)
             {
-                camera_position_c = Matrix_Translate(-carForward.x*6 /(1+norm(current_velocity)*0.04), 2/(1+norm(current_velocity)*0.05f), -carForward.z*6/(1+norm(current_velocity)*0.04)) * carPos;
+
+              if(boostTime<current_time){
+                camera_position_c = Matrix_Translate(-carForward.x * 6 / (1 + norm(current_velocity) * 0.04), 2 / (1 + norm(current_velocity) * 0.05f), -carForward.z * 6 / (1 + norm(current_velocity) * 0.04)) * carPos;
+              }else{
+                camera_position_c = Matrix_Translate(-carForward.x * 6 / (1 + norm(current_velocity) * 0.01), 2 / (1 + norm(current_velocity) * 0.02f), -carForward.z * 6 / (1 + norm(current_velocity) * 0.01)) * carPos;
+              }
             }
             else if (camType == 1)
             {
@@ -487,50 +484,57 @@ int main(int argc, char *argv[])
             glm::vec4 camera_view_vector = camera_lookat_l - camera_position_c;
             glm::vec4 camera_up_vector = glm::vec4(0.0f, 1.0f, 0.0f, 0.0f);
 
-
             view = Matrix_Camera_View(camera_position_c, camera_view_vector, camera_up_vector);
-        }else{
-            //camera livre
-            if(updateCamPos){
-                updateCamPos=false;
-                c=Matrix_Translate(-carForward.x,-carForward.y,carForward.z)*carPos;
+        }
+        else
+        {
+            // camera livre
+            if (updateCamPos)
+            {
+                updateCamPos = false;
+                c = Matrix_Translate(-carForward.x, -carForward.y, carForward.z) * carPos;
             }
             float vy = sin(g_CameraPhi);
-            float vz = cos(g_CameraPhi)*cos(g_CameraTheta);
-            float vx = cos(g_CameraPhi)*sin(g_CameraTheta);
-            glm::vec4 camera_view_vector = glm::vec4(vx,vy,vz,0.0f);
-            glm::vec4 camera_up_vector   = glm::vec4(0.0f,1.0f,0.0f,0.0f);
-            glm::vec4 w =-camera_view_vector/norm(camera_view_vector);
-            glm::vec4 intermediate=crossproduct(camera_up_vector,camera_view_vector);
-            glm::vec4 u = intermediate/norm(intermediate);
-            if(wPressed){
-                c+= -w*camSpeed*delta_t;
+            float vz = cos(g_CameraPhi) * cos(g_CameraTheta);
+            float vx = cos(g_CameraPhi) * sin(g_CameraTheta);
+            glm::vec4 camera_view_vector = glm::vec4(vx, vy, vz, 0.0f);
+            glm::vec4 camera_up_vector = glm::vec4(0.0f, 1.0f, 0.0f, 0.0f);
+            glm::vec4 w = -camera_view_vector / norm(camera_view_vector);
+            glm::vec4 intermediate = crossproduct(camera_up_vector, camera_view_vector);
+            glm::vec4 u = intermediate / norm(intermediate);
+            if (wPressed)
+            {
+                c += -w * camSpeed * delta_t;
             }
-            if(aPressed){
-                c+= u*camSpeed*delta_t;
+            if (aPressed)
+            {
+                c += u * camSpeed * delta_t;
             }
 
-            if(sPressed){
-                c+= w*camSpeed*delta_t;
+            if (sPressed)
+            {
+                c += w * camSpeed * delta_t;
             }
-            if(dPressed){
-                c+= -u*camSpeed*delta_t;
+            if (dPressed)
+            {
+                c += -u * camSpeed * delta_t;
             }
-            if(spacePressed){
-                c+= -crossproduct(w,u)/norm(crossproduct(w,u))*camSpeed*delta_t;
+            if (spacePressed)
+            {
+                c += -crossproduct(w, u) / norm(crossproduct(w, u)) * camSpeed * delta_t;
             }
-            if(ctrlPressed){
-                c+= crossproduct(w,u)/norm(crossproduct(w,u))*camSpeed*delta_t;
+            if (ctrlPressed)
+            {
+                c += crossproduct(w, u) / norm(crossproduct(w, u)) * camSpeed * delta_t;
             }
-            camera_position_c=c;
+            camera_position_c = c;
             view = Matrix_Camera_View(camera_position_c, camera_view_vector, camera_up_vector);
-            }
+        }
         glm::mat4 projection;
-
 
         float nearplane = -0.1f;
         float farplane = -200.0f;
-        float field_of_view = (PI / 3.0f)-(norm(current_velocity)*0.002f);
+        float field_of_view = (PI / 3.0f) - (norm(current_velocity) * 0.002f);
         projection = Matrix_Perspective(field_of_view, g_ScreenRatio, nearplane, farplane);
         glUniformMatrix4fv(view_uniform, 1, GL_FALSE, glm::value_ptr(view));
         glUniformMatrix4fv(projection_uniform, 1, GL_FALSE, glm::value_ptr(projection));
@@ -541,9 +545,9 @@ int main(int argc, char *argv[])
 #define SPHERE 3
 #define DECOR 4
 #define START 5
-        //skysphere + decoracoes implementadas desenhando primeiro e limpando o zbuffer
-        glm::mat4 modelSkybox=Matrix_Translate(camera_position_c.x,camera_position_c.y,camera_position_c.z)*Matrix_Scale(3.0f,3.0f,3.0f)*Matrix_Identity();
-        glm::mat4 modelDecor = Matrix_Translate(camera_position_c.x+0.6f,camera_position_c.y+0.05f,camera_position_c.z-0.01f)*Matrix_Rotate_Z(PI/8)*Matrix_Rotate_Y(PI/2)*Matrix_Identity();
+        // skysphere + decoracoes implementadas desenhando primeiro e limpando o zbuffer
+        glm::mat4 modelSkybox = Matrix_Translate(camera_position_c.x, camera_position_c.y, camera_position_c.z) * Matrix_Scale(3.0f, 3.0f, 3.0f) * Matrix_Identity();
+        glm::mat4 modelDecor = Matrix_Translate(camera_position_c.x + 0.6f, camera_position_c.y + 0.05f, camera_position_c.z - 0.01f) * Matrix_Rotate_Z(PI / 8) * Matrix_Rotate_Y(PI / 2) * Matrix_Identity();
         glUniformMatrix4fv(model_uniform, 1, GL_FALSE, glm::value_ptr(modelSkybox));
         glUniform1i(object_id_uniform, SPHERE);
         DrawVirtualObject("sphere");
@@ -553,8 +557,8 @@ int main(int argc, char *argv[])
         DrawVirtualObject("decor");
         glClear(GL_DEPTH_BUFFER_BIT);
         glEnable(GL_CULL_FACE);
-          auto reset = [&]() 
-        { 
+        auto reset = [&]()
+        {
             carForward = glm::vec4(1.0f, 0.0f, 0.0f, 0.0f);
             current_velocity = glm::vec4(0.0f, 0.0f, 0.0f, 0.0f);
             carPos = glm::vec4(0.0f, 0.0f, 0.0f, 1.0f);
@@ -575,122 +579,168 @@ int main(int argc, char *argv[])
             modelOponnent2 = Matrix_Rotate_Y(3.141592 / 2) * modelOponnent2;
             modelOponnent2 = Matrix_Translate(oldPos2.x, oldPos2.y, oldPos2.z) * modelOponnent2;
             opponnent2forward = glm::vec4(1.0f, 0.0f, 0.0f, 0.0f);
-            opponnent2pos = glm::vec4(oldPos2.x, oldPos2.y, oldPos2.z, 1.0f); 
-            lost=false;
-            checkpoint=false;
-            finished=false;
+            opponnent2pos = glm::vec4(oldPos2.x, oldPos2.y, oldPos2.z, 1.0f);
+            lost = false;
+            checkpoint = false;
+            finished = false;
+            boostpower = 100;
+            stunTime = 0;
+            boostTime = 0;
         };
 
-        if ((!raceStart&&startPressed))
-        {//restart race
+        if ((!raceStart && startPressed))
+        { // restart race
             glfwSetTime(0);
             raceStart = true;
-            prev_time=0;
+            prev_time = 0;
             reset();
         }
-        if(raceStart){
-        // definição dos controles do player e modelo de fisica
-        current_velocity -= friction * delta_t * current_velocity;
-        if(camType<2){
-        if (wPressed)
+        if (raceStart)
         {
-            acceleration += max_velocity * carForward * delta_t;
-        }
-        if (aPressed)
-        {
-            float velocity_norm = norm(current_velocity);
-            float rotation = 2.0f;
-            if (velocity_norm > 0)
+            // definição dos controles do player e modelo de fisica
+            current_velocity -= friction * delta_t * current_velocity;
+            if (camType < 2)
             {
-                rotation = std::min(std::max(max_velocity / norm(current_velocity), 0.5f), 2.0f);
-            }
-            carForward = Matrix_Rotate_Y(rotation * delta_t) * carForward;
-            modelPlayer = Matrix_Translate(carPos.x, carPos.y, carPos.z) * Matrix_Rotate_Y(rotation * delta_t) * Matrix_Translate(-carPos.x, -carPos.y, -carPos.z) * modelPlayer;
-        }
+                if (wPressed)
+                {
+                    acceleration += max_velocity * carForward * delta_t;
+                }
+                if (aPressed)
+                {
+                    float velocity_norm = norm(current_velocity);
+                    float rotation = 2.0f;
+                    if (velocity_norm > 0)
+                    {
+                        rotation = std::min(std::max(max_velocity / norm(current_velocity), 0.5f), 2.0f);
+                    }
+                    carForward = Matrix_Rotate_Y(rotation * delta_t) * carForward;
+                    modelPlayer = Matrix_Translate(carPos.x, carPos.y, carPos.z) * Matrix_Rotate_Y(rotation * delta_t) * Matrix_Translate(-carPos.x, -carPos.y, -carPos.z) * modelPlayer;
+                }
 
-        if (sPressed)
-        {
-            acceleration -= max_velocity * carForward * delta_t;
-        }
-        if (dPressed)
-        {
-            float velocity_norm = norm(current_velocity);
-            float rotation = 2.0f;
-            if (velocity_norm > 0)
+                if (sPressed)
+                {
+                    acceleration -= max_velocity * carForward * delta_t;
+                }
+                if (dPressed)
+                {
+                    float velocity_norm = norm(current_velocity);
+                    float rotation = 2.0f;
+                    if (velocity_norm > 0)
+                    {
+                        rotation = std::min(std::max(max_velocity / norm(current_velocity), 0.5f), 2.0f);
+                    }
+                    carForward = Matrix_Rotate_Y(-rotation * delta_t) * carForward;
+                    modelPlayer = Matrix_Translate(carPos.x, carPos.y, carPos.z) * Matrix_Rotate_Y(-rotation * delta_t) * Matrix_Translate(-carPos.x, -carPos.y, -carPos.z) * modelPlayer;
+                }
+
+                lateral_velocity = glm::vec4(0.0f, 0.0f, 0.0f, 0.0f);
+                carLeft = crossproduct(up_vector, carForward);
+                carRight = -carLeft;
+                if (hasRotatedL)
+                {
+                    modelPlayer = Matrix_Translate(carPos.x, carPos.y, carPos.z) * Matrix_Rotate(PI / 20, carForward) * Matrix_Translate(-carPos.x, -carPos.y, -carPos.z) * modelPlayer;
+                    hasRotatedL = false;
+                }
+                if (hasRotatedR)
+                {
+                    modelPlayer = Matrix_Translate(carPos.x, carPos.y, carPos.z) * Matrix_Rotate(-PI / 20, carForward) * Matrix_Translate(-carPos.x, -carPos.y, -carPos.z) * modelPlayer;
+                    hasRotatedR = false;
+                }
+                if (g_LeftMouseButtonPressed && !g_RightMouseButtonPressed && (stunTime < current_time))
+                {
+                    lateral_velocity += carLeft * max_velocity * 30.0f * delta_t;
+                    if (!hasRotatedL)
+                    {
+                        hasRotatedL = true;
+                        modelPlayer = Matrix_Translate(carPos.x, carPos.y, carPos.z) * Matrix_Rotate(-PI / 20, carForward) * Matrix_Translate(-carPos.x, -carPos.y, -carPos.z) * modelPlayer;
+                    }
+                }
+                if (g_RightMouseButtonPressed && !g_LeftMouseButtonPressed && (stunTime < current_time))
+                {
+                    lateral_velocity += carRight * max_velocity * 30.0f * delta_t;
+                    if (!hasRotatedR)
+                    {
+                        hasRotatedR = true;
+                        modelPlayer = Matrix_Translate(carPos.x, carPos.y, carPos.z) * Matrix_Rotate(PI / 20, carForward) * Matrix_Translate(-carPos.x, -carPos.y, -carPos.z) * modelPlayer;
+                    }
+                }
+                if (spacePressed && (boostTime < current_time)&&boostpower>1)
+                {
+                    boostpower -= 22;
+                    if(boostpower<=0){
+                        boostpower=1;
+                    }
+                    acceleration += 10.0f * max_velocity * carForward * delta_t;
+                    current_velocity += 1.0f * max_velocity * carForward;
+                    boostTime = current_time + 5;
+                }
+            }
+
+            if (norm(acceleration) == 0 && norm(current_velocity) < 0.1)
             {
-                rotation = std::min(std::max(max_velocity / norm(current_velocity), 0.5f), 2.0f);
+                current_velocity *= 0;
             }
-            carForward = Matrix_Rotate_Y(-rotation * delta_t) * carForward;
-            modelPlayer = Matrix_Translate(carPos.x, carPos.y, carPos.z) * Matrix_Rotate_Y(-rotation * delta_t) * Matrix_Translate(-carPos.x, -carPos.y, -carPos.z) * modelPlayer;
-        }
 
-        lateral_velocity = glm::vec4(0.0f, 0.0f, 0.0f, 0.0f);
-        carLeft = crossproduct(up_vector, carForward);
-        carRight = -carLeft;
-        if(hasRotatedL){
-            modelPlayer=Matrix_Translate(carPos.x, carPos.y, carPos.z)*Matrix_Rotate(PI/20,carForward) * Matrix_Translate(-carPos.x, -carPos.y, -carPos.z)*modelPlayer;
-            hasRotatedL=false;
-        }
-        if(hasRotatedR){
-            modelPlayer=Matrix_Translate(carPos.x, carPos.y, carPos.z)*Matrix_Rotate(-PI/20,carForward) * Matrix_Translate(-carPos.x, -carPos.y, -carPos.z)*modelPlayer;
-            hasRotatedR=false;
-        }
-        if(g_LeftMouseButtonPressed&&!g_RightMouseButtonPressed){
-            lateral_velocity += carLeft * max_velocity * 30.0f * delta_t;
-            if(!hasRotatedL){
-                hasRotatedL=true;
-                modelPlayer=Matrix_Translate(carPos.x, carPos.y, carPos.z)*Matrix_Rotate(-PI/20,carForward) * Matrix_Translate(-carPos.x, -carPos.y, -carPos.z)*modelPlayer;
+            if (dotproduct(current_velocity, carForward) < 0)
+            {
+                current_velocity = norm(current_velocity) * -carForward + acceleration;
             }
-        }
-        if(g_RightMouseButtonPressed&&!g_LeftMouseButtonPressed){
-            lateral_velocity += carRight * max_velocity * 30.0f * delta_t;
-            if(!hasRotatedR){
-                hasRotatedR=true;
-                modelPlayer=Matrix_Translate(carPos.x, carPos.y, carPos.z)*Matrix_Rotate(PI/20,carForward) * Matrix_Translate(-carPos.x, -carPos.y, -carPos.z)*modelPlayer;
+            else
+            {
+                current_velocity = norm(current_velocity) * carForward + acceleration;
             }
+            bool collided1 = spheres_collision(carPos, playerHitboxRadius, opponnent1pos, opponnent1HitboxRadius);
+            bool collided2 = spheres_collision(carPos, playerHitboxRadius, opponnent2pos, opponnent2HitboxRadius);
+            if (collided1)
+            {
+                glm::vec4 yfilter = glm::vec4(1.0f, 0.0f, 1.0f, 0.0f);
+                glm::vec4 axis = ((carPos * yfilter - opponnent1pos * yfilter)) / norm((carPos * yfilter) - (opponnent1pos * yfilter));
+                std::cout << axis.w << " " << current_velocity.w;
+                glm::vec4 newSpeed = 1.0f * (current_velocity - 2 * (dotproduct(current_velocity, axis)) * axis);
+                current_velocity = newSpeed;
+                if (norm(lateral_velocity) != 0)
+                {
+                    lateral_velocity = -lateral_velocity;
+                    stunTime = current_time + 0.5;
+                }
+                boostpower-=10;
+            }
+            if (collided2)
+            {
+                glm::vec4 yfilter = glm::vec4(1.0f, 0.0f, 1.0f, 0.0f);
+                glm::vec4 axis = ((carPos * yfilter - opponnent2pos * yfilter)) / norm((carPos * yfilter) - (opponnent2pos * yfilter));
+                std::cout << axis.w << " " << current_velocity.w;
+                glm::vec4 newSpeed = 1.0f * (current_velocity - 2 * (dotproduct(current_velocity, axis)) * axis);
+                current_velocity = newSpeed;
+                if (norm(lateral_velocity) != 0)
+                {
+                    lateral_velocity = -lateral_velocity;
+                    stunTime = current_time + 0.5;
+                }
+                boostpower-=10;
+            }
+            frame_movement = (current_velocity + lateral_velocity) * delta_t;
+            modelPlayer = Matrix_Translate(frame_movement.x, frame_movement.y, frame_movement.z) * modelPlayer;
+            carPos += frame_movement;
+            acceleration *= 0;
+
+            // comportamento dos oponentes
+            float bezierTime1 = current_time / 5;
+            float bezierTime2 = current_time / 8;
+            // oponnent 1
+
+            modelOponnent1 = opponentMovement(modelOponnent1, bezierTime1, controlPoints1_1, controlPoints1_2, controlPoints1_3, controlPoints1_4, controlPoints1_5, controlPoints1_6, 3, opponnent1forward, opponnent1pos, oldPos1);
+
+            // oponnent 2
+
+            modelOponnent2 = opponentMovement(modelOponnent2, bezierTime2, controlPoints2_1, controlPoints2_2, controlPoints2_3, controlPoints2_4, controlPoints2_5, controlPoints2_6, 3, opponnent2forward, opponnent2pos, oldPos2);
         }
 
-        }
+        modelSkybox = Matrix_Translate(carPos.x, carPos.y, carPos.z) * Matrix_Scale(0.8f, 0.8f, 0.8f) * Matrix_Identity();
+        glUniformMatrix4fv(model_uniform, 1, GL_FALSE, glm::value_ptr(modelSkybox));
+        glUniform1i(object_id_uniform, SPHERE);
+        DrawVirtualObject("sphere");
 
-        if (norm(acceleration) == 0 && norm(current_velocity) < 0.1)
-        {
-            current_velocity *= 0;
-        }
-
-        if (dotproduct(current_velocity, carForward) < 0)
-        {
-            current_velocity = norm(current_velocity) * -carForward + acceleration;
-        }
-        else
-        {
-            current_velocity = norm(current_velocity) * carForward + acceleration;
-        }
-
-        frame_movement = (current_velocity + lateral_velocity) * delta_t;
-        modelPlayer = Matrix_Translate(frame_movement.x, frame_movement.y, frame_movement.z) * modelPlayer;
-        carPos += frame_movement;
-        acceleration *= 0;
-
-
-        // comportamento dos oponentes
-        float bezierTime1 = current_time / 5;
-        float bezierTime2 = current_time / 8;
-        // oponnent 1
-
-        modelOponnent1 = opponentMovement(modelOponnent1, bezierTime1, controlPoints1_1, controlPoints1_2,controlPoints1_3,controlPoints1_4,controlPoints1_5,controlPoints1_6, 3, opponnent1forward, opponnent1pos, oldPos1);
-
-
-        // oponnent 2
-
-        modelOponnent2 = opponentMovement(modelOponnent2, bezierTime2, controlPoints2_1, controlPoints2_2,controlPoints2_3,controlPoints2_4,controlPoints2_5,controlPoints2_6, 3, opponnent2forward, opponnent2pos, oldPos2);
-
-        bool collided = spheres_collision(carPos+playerHitboxOffset, playerHitboxRadius, opponnent1pos+opponnent1HitboxOffset, opponnent1HitboxRadius);
-
-        if(collided){
-            std::cout << "boom!" << "\n";
-        }
-
-        }
         glUniformMatrix4fv(model_uniform, 1, GL_FALSE, glm::value_ptr(modelPlayer));
         glUniform1i(object_id_uniform, BLUE_FALCON);
         DrawVirtualObject("blue_falcon");
@@ -716,32 +766,41 @@ int main(int argc, char *argv[])
         glUniform1i(object_id_uniform, START);
         DrawVirtualObject("Starting_Line");
 
-
-        //win/lose logic
-        if(current_time>30 && raceStart && !finished){
-            lost=true;
+        // win/lose logic
+        if (current_time > 30 && raceStart && !finished)
+        {
+            lost = true;
         }
-        if(false/*colisao com checkpoint*/){
-            checkpoint=true;
+        if (false /*colisao com checkpoint*/)
+        {
+            checkpoint = true;
         }
-        if(false/*colisao com final*/){
-            if(checkpoint){
-                finished=true;
+        if (false /*colisao com final*/)
+        {
+            if (checkpoint)
+            {
+                finished = true;
             }
         }
-        int width, height;
-        glfwGetFramebufferSize(window, &width, &height);
-        if(finished && !lost){
-            raceStart=false;
-            TextRendering_PrintString(window, "You Win, Press Enter to Restart", -1.0f+pad/10, -1.0f+2*pad/10,1.0f);
-        }else if(finished && lost){
-            raceStart=false;
-            TextRendering_PrintString(window, "You Lost, Press Enter to Restart",-1.0f+pad/10, -1.0f+2*pad/10,1.0f);
+        if (finished && !lost)
+        {
+            raceStart = false;
+            TextRendering_PrintString(window, "You Win, Press Enter to Restart", -1.0f + pad / 10, -1.0f + 2 * pad / 10, 1.0f);
         }
-        if(!raceStart && !finished){
-        TextRendering_PrintString(window, "Press Enter to Start",-1.0f+pad/10, -1.0f+2*pad/10,1.0f);
+        else if (finished && lost)
+        {
+            raceStart = false;
+            TextRendering_PrintString(window, "You Lost, Press Enter to Restart", -1.0f + pad / 10, -1.0f + 2 * pad / 10, 1.0f);
         }
-        
+        if (!raceStart && !finished)
+        {
+            TextRendering_PrintString(window, "Press Enter to Start", -1.0f + pad / 10, -1.0f + 2 * pad / 10, 1.0f);
+        }
+        if(boostpower<=0){
+             raceStart = false;
+            TextRendering_PrintString(window, "You Lost, Press Enter to Restart", -1.0f + pad / 10, -1.0f + 2 * pad / 10, 1.0f);
+        }
+        printBoost(boostpower,pad,window);
         glfwSwapBuffers(window);
         glfwPollEvents();
     }
@@ -750,8 +809,18 @@ int main(int argc, char *argv[])
 
     return 0;
 }
-
-
+void printBoost(float power,float pad,GLFWwindow* window){
+    std::string boost="Boost Power[";
+    int convert=ceil(power/10);
+    for(int i=0;i<convert;i++){
+        boost.append("*");
+    }
+    for(int i=convert;i<10;i++){
+        boost.append("-");
+    }
+    boost.append("]");
+    TextRendering_PrintString(window, boost, -1.0f + pad / 20, 1.0f-2* pad, 2.0f);
+}
 // Função que carrega uma imagem para ser utilizada como textura
 void LoadTextureImage(const char *filename)
 {
@@ -1413,7 +1482,7 @@ void KeyCallback(GLFWwindow *window, int key, int scancode, int action, int mod)
     }
 
     // Se o usuário apertar a tecla R, recarregamos os shaders dos arquivos "shader_fragment.glsl" e "shader_vertex.glsl".
-    if (key == GLFW_KEY_R&& action == GLFW_PRESS)
+    if (key == GLFW_KEY_R && action == GLFW_PRESS)
     {
         LoadShadersFromFiles();
         fprintf(stdout, "Shaders recarregados!\n");
@@ -1525,4 +1594,3 @@ void ErrorCallback(int error, const char *description)
 {
     fprintf(stderr, "ERROR: GLFW: %s\n", description);
 }
-
