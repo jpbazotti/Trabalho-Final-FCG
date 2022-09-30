@@ -561,14 +561,11 @@ int main(int argc, char *argv[])
             if (camType == 0)
             {
 
-                if (boostTime < current_time)
-                {
-                    camera_position_c = Matrix_Translate(-carForward.x * 6 / (1 + norm(current_velocity) * 0.04), 2 / (1 + norm(current_velocity) * 0.05f), -carForward.z * 6 / (1 + norm(current_velocity) * 0.04)) * carPos;
-                }
-                else
-                {
-                    camera_position_c = Matrix_Translate(-carForward.x * 6 / (1 + norm(current_velocity) * 0.01), 2 / (1 + norm(current_velocity) * 0.02f), -carForward.z * 6 / (1 + norm(current_velocity) * 0.01)) * carPos;
-                }
+              if(boostTime<current_time){
+                camera_position_c = Matrix_Translate(-carForward.x * 6 / (1 + norm(current_velocity) * norm(current_velocity) * 0.0004), 2 / (1 + norm(current_velocity) * 0.05f), -carForward.z * 6 / (1 + norm(current_velocity) * norm(current_velocity) * 0.0004)) * carPos;
+              }else{
+                camera_position_c = Matrix_Translate(-carForward.x * 6 / (1 + norm(current_velocity) * norm(current_velocity) * 0.0001), 2 / (1 + norm(current_velocity) * 0.02f), -carForward.z * 6 / (1 + norm(current_velocity) * norm(current_velocity) * 0.0001)) * carPos;
+              }
             }
             else if (camType == 1)
             {
