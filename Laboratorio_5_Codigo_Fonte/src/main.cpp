@@ -152,6 +152,8 @@ bool dPressed = false;
 bool ctrlPressed=false;
 bool spacePressed=false;
 bool startPressed=false;
+bool hasRotatedL=false;
+bool hasRotatedR=false;
 // Variáveis que definem a câmera em coordenadas esféricas, controladas pelo
 // usuário através do mouse (veja função CursorPosCallback()). A posição
 // efetiva da câmera é calculada dentro da função main(), dentro do loop de
@@ -432,6 +434,7 @@ int main(int argc, char *argv[])
 
     while (!glfwWindowShouldClose(window))
     {
+        float pad = TextRendering_LineHeight(window);
         glDisable(GL_CULL_FACE);
 
         glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
@@ -562,7 +565,8 @@ int main(int argc, char *argv[])
             checkpoint=false;
             finished=false;
         };
-        if (!raceStart&&startPressed)
+
+        if ((!raceStart&&startPressed))
         {//restart race
             glfwSetTime(0);
             raceStart = true;
@@ -608,11 +612,27 @@ int main(int argc, char *argv[])
         lateral_velocity = glm::vec4(0.0f, 0.0f, 0.0f, 0.0f);
         carLeft = crossproduct(up_vector, carForward);
         carRight = -carLeft;
-        if(g_LeftMouseButtonPressed){
-            lateral_velocity += carLeft * max_velocity * 30.0f * delta_t;
+        if(hasRotatedL){
+            modelPlayer=Matrix_Translate(carPos.x, carPos.y, carPos.z)*Matrix_Rotate(PI/20,carForward) * Matrix_Translate(-carPos.x, -carPos.y, -carPos.z)*modelPlayer;
+            hasRotatedL=false;
         }
-        if(g_RightMouseButtonPressed){
+        if(hasRotatedR){
+            modelPlayer=Matrix_Translate(carPos.x, carPos.y, carPos.z)*Matrix_Rotate(-PI/20,carForward) * Matrix_Translate(-carPos.x, -carPos.y, -carPos.z)*modelPlayer;
+            hasRotatedR=false;
+        }
+        if(g_LeftMouseButtonPressed&&!g_RightMouseButtonPressed){
+            lateral_velocity += carLeft * max_velocity * 30.0f * delta_t;
+            if(!hasRotatedL){
+                hasRotatedL=true;
+                modelPlayer=Matrix_Translate(carPos.x, carPos.y, carPos.z)*Matrix_Rotate(-PI/20,carForward) * Matrix_Translate(-carPos.x, -carPos.y, -carPos.z)*modelPlayer;
+            }
+        }
+        if(g_RightMouseButtonPressed&&!g_LeftMouseButtonPressed){
             lateral_velocity += carRight * max_velocity * 30.0f * delta_t;
+            if(!hasRotatedR){
+                hasRotatedR=true;
+                modelPlayer=Matrix_Translate(carPos.x, carPos.y, carPos.z)*Matrix_Rotate(PI/20,carForward) * Matrix_Translate(-carPos.x, -carPos.y, -carPos.z)*modelPlayer;
+            }
         }
 
         }
@@ -688,16 +708,18 @@ int main(int argc, char *argv[])
                 finished=true;
             }
         }
-        float pad = TextRendering_LineHeight(window);
         int width, height;
         glfwGetFramebufferSize(window, &width, &height);
         if(finished && !lost){
+            raceStart=false;
             TextRendering_PrintString(window, "You Win, Press Enter to Restart", -1.0f+pad/10, -1.0f+2*pad/10,1.0f);
         }else if(finished && lost){
+            raceStart=false;
             TextRendering_PrintString(window, "You Lost, Press Enter to Restart",-1.0f+pad/10, -1.0f+2*pad/10,1.0f);
         }
-        
-        
+        if(!raceStart && !finished){
+        TextRendering_PrintString(window, "Press Enter to Start",-1.0f+pad/10, -1.0f+2*pad/10,1.0f);
+        }
         
         glfwSwapBuffers(window);
         glfwPollEvents();
@@ -1273,34 +1295,18 @@ void MouseButtonCallback(GLFWwindow *window, int button, int action, int mods)
     }
     if (button == GLFW_MOUSE_BUTTON_RIGHT && action == GLFW_PRESS)
     {
-        // Se o usuário pressionou o botão esquerdo do mouse, guardamos a
-        // posição atual do cursor nas variáveis g_LastCursorPosX e
-        // g_LastCursorPosY.  Também, setamos a variável
-        // g_RightMouseButtonPressed como true, para saber que o usuário está
-        // com o botão esquerdo pressionado.
-        glfwGetCursorPos(window, &g_LastCursorPosX, &g_LastCursorPosY);
         g_RightMouseButtonPressed = true;
     }
     if (button == GLFW_MOUSE_BUTTON_RIGHT && action == GLFW_RELEASE)
     {
-        // Quando o usuário soltar o botão esquerdo do mouse, atualizamos a
-        // variável abaixo para false.
         g_RightMouseButtonPressed = false;
     }
     if (button == GLFW_MOUSE_BUTTON_MIDDLE && action == GLFW_PRESS)
     {
-        // Se o usuário pressionou o botão esquerdo do mouse, guardamos a
-        // posição atual do cursor nas variáveis g_LastCursorPosX e
-        // g_LastCursorPosY.  Também, setamos a variável
-        // g_MiddleMouseButtonPressed como true, para saber que o usuário está
-        // com o botão esquerdo pressionado.
-        glfwGetCursorPos(window, &g_LastCursorPosX, &g_LastCursorPosY);
         g_MiddleMouseButtonPressed = true;
     }
     if (button == GLFW_MOUSE_BUTTON_MIDDLE && action == GLFW_RELEASE)
     {
-        // Quando o usuário soltar o botão esquerdo do mouse, atualizamos a
-        // variável abaixo para false.
         g_MiddleMouseButtonPressed = false;
     }
 }
@@ -1315,7 +1321,7 @@ void CursorPosCallback(GLFWwindow *window, double xpos, double ypos)
     // parâmetros que definem a posição da câmera dentro da cena virtual.
     // Assim, temos que o usuário consegue controlar a câmera.
 
-    if (g_LeftMouseButtonPressed)
+    if (g_MiddleMouseButtonPressed)
     {
         // Deslocamento do cursor do mouse em x e y de coordenadas de tela!
         float dx = xpos - g_LastCursorPosX;
