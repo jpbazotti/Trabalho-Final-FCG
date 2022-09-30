@@ -985,7 +985,7 @@
 	<intrin.h>
 	<arm_neon.h>
 
-1661356587 source:c:\users\joão\desktop\f-zero\trabalho-final-fcg\laboratorio_5_codigo_fonte\src\textrendering.cpp
+1664557587 source:c:\users\joão\desktop\f-zero\trabalho-final-fcg\laboratorio_5_codigo_fonte\src\textrendering.cpp
 	<string>
 	<glad/glad.h>
 	<GLFW/glfw3.h>
@@ -1594,7 +1594,7 @@
 	<fstream>
 	<sstream>
 
-1664484117 source:c:\users\joão\desktop\f-zero\trabalho-final-fcg\laboratorio_5_codigo_fonte\src\main.cpp
+1664557326 source:c:\users\joão\desktop\f-zero\trabalho-final-fcg\laboratorio_5_codigo_fonte\src\main.cpp
 	<cmath>
 	<cstdio>
 	<cstdlib>
@@ -1617,7 +1617,6 @@
 	<stb_image.h>
 	"utils.h"
 	"matrices.h"
-	"textRendering.h"
 	"bezier.h"
 	"opponent.h"
 

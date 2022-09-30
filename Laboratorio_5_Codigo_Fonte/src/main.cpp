@@ -47,7 +47,6 @@
 // Headers locais, definidos na pasta "include/"
 #include "utils.h"
 #include "matrices.h"
-#include "textRendering.h"
 #include "bezier.h"
 #include "opponent.h"
 #define PI 3.14159265358979323846
@@ -96,6 +95,10 @@ void LoadShader(const char *filename, GLuint shader_id);                     // 
 GLuint CreateGpuProgram(GLuint vertex_shader_id, GLuint fragment_shader_id); // Cria um programa de GPU
 void PrintObjModelInfo(ObjModel *);                                          // Função para debugging
 
+void TextRendering_Init();
+float TextRendering_LineHeight(GLFWwindow* window);
+float TextRendering_CharWidth(GLFWwindow* window);
+void TextRendering_PrintString(GLFWwindow* window, const std::string &str, float x, float y, float scale = 1.0f);
 // Funções callback para comunicação com o sistema operacional e interação do
 // usuário. Veja mais comentários nas definições das mesmas, abaixo.
 void FramebufferSizeCallback(GLFWwindow *window, int width, int height);
@@ -415,6 +418,9 @@ int main(int argc, char *argv[])
 
 
     bool raceStart = false;
+    bool lost = false;
+    bool checkpoint = false;
+    bool finished=false;
     bool updateCamPos;
 
     while (!glfwWindowShouldClose(window))
@@ -522,14 +528,10 @@ int main(int argc, char *argv[])
         DrawVirtualObject("decor");
         glClear(GL_DEPTH_BUFFER_BIT);
         glEnable(GL_CULL_FACE);
-
-        if (startPressed)
-        {//restart race
-            glfwSetTime(0);
-            raceStart = true;
+          auto reset = [&]() 
+        { 
             carForward = glm::vec4(1.0f, 0.0f, 0.0f, 0.0f);
             current_velocity = glm::vec4(0.0f, 0.0f, 0.0f, 0.0f);
-            prev_time=0;
             carPos = glm::vec4(0.0f, 0.0f, 0.0f, 1.0f);
             oldPos1 = glm::vec4(0.0f, 0.16f, 2.0f, 1.0f);
             oldPos2 = glm::vec4(0.0f, 0.16f, -2.0f, 1.0f);
@@ -548,7 +550,17 @@ int main(int argc, char *argv[])
             modelOponnent2 = Matrix_Rotate_Y(3.141592 / 2) * modelOponnent2;
             modelOponnent2 = Matrix_Translate(oldPos2.x, oldPos2.y, oldPos2.z) * modelOponnent2;
             opponnent2forward = glm::vec4(1.0f, 0.0f, 0.0f, 0.0f);
-            opponnent2pos = glm::vec4(oldPos2.x, oldPos2.y, oldPos2.z, 1.0f);
+            opponnent2pos = glm::vec4(oldPos2.x, oldPos2.y, oldPos2.z, 1.0f); 
+            lost=false;
+            checkpoint=false;
+            finished=false;
+        };
+        if (!raceStart&&startPressed)
+        {//restart race
+            glfwSetTime(0);
+            raceStart = true;
+            prev_time=0;
+            reset();
         }
         if(raceStart){
         // definição dos controles do player e modelo de fisica
@@ -646,6 +658,29 @@ int main(int argc, char *argv[])
         DrawVirtualObject("Starting_Line");
 
 
+        //win/lose logic
+        if(current_time>30 && raceStart && !finished){
+            lost=true;
+        }
+        if(false/*colisao com checkpoint*/){
+            checkpoint=true;
+        }
+        if(false/*colisao com final*/){
+            if(checkpoint){
+                finished=true;
+            }
+        }
+        float pad = TextRendering_LineHeight(window);
+        int width, height;
+        glfwGetFramebufferSize(window, &width, &height);
+        if(finished && !lost){
+            TextRendering_PrintString(window, "You Win, Press Enter to Restart", -1.0f+pad/10, -1.0f+2*pad/10,1.0f);
+        }else if(finished && lost){
+            TextRendering_PrintString(window, "You Lost, Press Enter to Restart",-1.0f+pad/10, -1.0f+2*pad/10,1.0f);
+        }
+        
+        
+        
         glfwSwapBuffers(window);
         glfwPollEvents();
     }
@@ -654,6 +689,7 @@ int main(int argc, char *argv[])
 
     return 0;
 }
+
 
 // Função que carrega uma imagem para ser utilizada como textura
 void LoadTextureImage(const char *filename)
@@ -1332,12 +1368,13 @@ void KeyCallback(GLFWwindow *window, int key, int scancode, int action, int mod)
     }
 
     // Se o usuário apertar a tecla R, recarregamos os shaders dos arquivos "shader_fragment.glsl" e "shader_vertex.glsl".
-    if (key == GLFW_KEY_R && action == GLFW_PRESS)
+    if (key == GLFW_KEY_R&& action == GLFW_PRESS)
     {
         LoadShadersFromFiles();
         fprintf(stdout, "Shaders recarregados!\n");
         fflush(stdout);
     }
+
     if (key == GLFW_KEY_W)
     {
         if (action == GLFW_PRESS)
