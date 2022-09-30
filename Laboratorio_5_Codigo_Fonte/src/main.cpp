@@ -49,6 +49,7 @@
 #include "matrices.h"
 #include "bezier.h"
 #include "opponent.h"
+#include "collisions.h"
 #define PI 3.14159265358979323846
 // Estrutura que representa um modelo geométrico carregado a partir de um
 // arquivo ".obj". Veja https://en.wikipedia.org/wiki/Wavefront_.obj_file .
@@ -319,6 +320,12 @@ int main(int argc, char *argv[])
     glm::vec4 acceleration = glm::vec4(0.0f, 0.0f, 0.0f, 0.0f);
     glm::vec4 frame_movement = glm::vec4(0.0f, 0.0f, 0.0f, 0.0f);
 
+    // player hitbox
+    // sphere hitbox
+    float playerHitboxRadius = 3.0f;
+    // sphere offset from carPos
+    glm::vec4 playerHitboxOffset = glm::vec4(0.0f, 0.0f, 0.0f, 0.0f);
+
     // initial model manipulation
     modelPlayer = Matrix_Identity();
     modelPlayer = Matrix_Translate(carPos.x, carPos.y, carPos.z) * modelPlayer;
@@ -335,6 +342,12 @@ int main(int argc, char *argv[])
     modelOponnent1 = Matrix_Translate(oldPos1.x, oldPos1.y, oldPos1.z) * modelOponnent1;
     glm::vec4 opponnent1forward = glm::vec4(1.0f, 0.0f, 0.0f, 0.0f);
     glm::vec4 opponnent1pos = glm::vec4(oldPos1.x, oldPos1.y, oldPos1.z, 1.0f);
+
+    // player hitbox
+    // sphere hitbox
+    float opponnent1HitboxRadius = 3.0f;
+    // sphere offset from carPos
+    glm::vec4 opponnent1HitboxOffset = glm::vec4(0.0f, 0.0f, 0.0f, 0.0f);
 
     glm::mat4 modelOponnent2;
     modelOponnent2 = Matrix_Identity();
@@ -668,6 +681,12 @@ int main(int argc, char *argv[])
         // oponnent 2
 
         modelOponnent2 = opponentMovement(modelOponnent2, bezierTime2, controlPoints2_1, controlPoints2_2,controlPoints2_3,controlPoints2_4,controlPoints2_5,controlPoints2_6, 3, opponnent2forward, opponnent2pos, oldPos2);
+
+        bool collided = spheres_collision(carPos+playerHitboxOffset, playerHitboxRadius, opponnent1pos+opponnent1HitboxOffset, opponnent1HitboxRadius);
+
+        if(collided){
+            std::cout << "boom!" << "\n";
+        }
 
         }
         glUniformMatrix4fv(model_uniform, 1, GL_FALSE, glm::value_ptr(modelPlayer));
