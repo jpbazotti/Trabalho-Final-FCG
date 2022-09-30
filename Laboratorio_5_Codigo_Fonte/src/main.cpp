@@ -100,7 +100,14 @@ float TextRendering_LineHeight(GLFWwindow *window);
 float TextRendering_CharWidth(GLFWwindow *window);
 void TextRendering_PrintString(GLFWwindow *window, const std::string &str, float x, float y, float scale = 1.0f);
 bool spheres_collision(glm::vec4 hitbox1Center, float hitbox1Radius, glm::vec4 hitbox2Center, float hitbox2Radius);
-void printBoost(float power,float pad,GLFWwindow* window);
+typedef struct bbox
+{
+    glm::vec4 minPoint;
+    glm::vec4 maxPoint;
+    glm::vec4 normal;
+} bbox;
+glm::vec4 checkAllbbox(bbox player, std::vector<bbox> list);
+void printBoost(float power, float pad, GLFWwindow *window);
 
 // Funções callback para comunicação com o sistema operacional e interação do
 // usuário. Veja mais comentários nas definições das mesmas, abaixo.
@@ -138,10 +145,7 @@ std::stack<glm::mat4> g_MatrixStack;
 // Razão de proporção da janela (largura/altura). Veja função FramebufferSizeCallback().
 float g_ScreenRatio = 1.0f;
 
-// Ângulos de Euler que controlam a rotação de um dos cubos da cena virtual
-float g_AngleX = 0.0f;
-float g_AngleY = 0.0f;
-float g_AngleZ = 0.0f;
+
 
 // "g_LeftMouseButtonPressed = true" se o usuário está com o botão esquerdo do mouse
 // pressionado no momento atual. Veja função MouseButtonCallback().
@@ -306,11 +310,13 @@ int main(int argc, char *argv[])
     glCullFace(GL_BACK);
     glFrontFace(GL_CCW);
 
+    glm::vec4 nullvector = glm::vec4(0.0f, 0.0f, 0.0f, 0.0f);
     // time vars
     float prev_time = (float)glfwGetTime();
     float delta_t = 0.0f;
     // player vars
     glm::vec4 carPos = glm::vec4(0.0f, 0.0f, 0.0f, 1.0f);
+    bbox pBox;
     glm::vec4 carForward = glm::vec4(1.0f, 0.0f, 0.0f, 0.0f);
     glm::mat4 modelPlayer;
     float max_velocity = 20.0;
@@ -321,7 +327,6 @@ int main(int argc, char *argv[])
     float boostpower = 100.0f;
     float boostTime = 0;
     float stunTime = 0;
-
     // player hitbox
     // sphere hitbox
     float playerHitboxRadius = 0.8f;
@@ -442,6 +447,92 @@ int main(int argc, char *argv[])
     glm::vec4 up_vector = glm::vec4(0.0f, 1.0f, 0.0f, 0.0f);
     glm::vec4 carLeft = crossproduct(up_vector, carForward);
     glm::vec4 carRight = -carLeft;
+    std::vector<bbox> straightsBBoxes;
+    //straighline bounding boxes
+    bbox sbbox;
+    sbbox.minPoint = glm::vec4(-40.7087f, 0.167617f, -4.80944f, 0.0f);
+    sbbox.maxPoint = glm::vec4(119.674f, 1.14384f, -4.02039f, 0.0f);
+    sbbox.normal = glm::vec4(0.0f, 0.0f, 1.0f, 0.0f);
+    straightsBBoxes.push_back(sbbox);
+
+    sbbox.minPoint = glm::vec4(-40.7658f, 0.167617f, 3.9902f, 0.0f);
+    sbbox.maxPoint = glm::vec4(119.617f, 1.14384f, 4.77924f, 0.0f);
+    sbbox.normal = glm::vec4(0.0f, 0.0f, -1.0f, 0.0f);
+    straightsBBoxes.push_back(sbbox);
+
+    sbbox.minPoint = glm::vec4(127.899f, 0.167617f, 10.6331f, 0.0f);
+    sbbox.maxPoint = glm::vec4(128.936f, 1.14384f, 53.4338f, 0.0f);
+    sbbox.normal = glm::vec4(1.0f, 0.0f, 0.0f, 0.0f);
+    straightsBBoxes.push_back(sbbox);
+
+    sbbox.minPoint = glm::vec4(136.551f, 0.167617f, 9.02853f, 0.0f);
+    sbbox.maxPoint = glm::vec4(137.735f, 1.14384f, 53.4909f, 0.0f);
+    sbbox.normal = glm::vec4(-1.0f, 0.0f, 0.0f, 0.0f);
+    straightsBBoxes.push_back(sbbox);
+
+    sbbox.minPoint = glm::vec4(39.8501f, 0.167617f, 36.1797f, 0.0f);
+    sbbox.maxPoint = glm::vec4(96.9923f, 1.14384f, 36.9671f, 0.0f);
+    sbbox.normal = glm::vec4(0.0f, 0.0f, 1.0f, 0.0f);
+    straightsBBoxes.push_back(sbbox);
+
+    sbbox.minPoint = glm::vec4(39.793f, 0.167617f, 44.9793f, 0.0f);
+    sbbox.maxPoint = glm::vec4(96.92f, 1.14384f, 45.7667f, 0.0f);
+    sbbox.normal = glm::vec4(0.0f, 0.0f, -1.0f, 0.0f);
+    straightsBBoxes.push_back(sbbox);
+
+    sbbox.minPoint = glm::vec4(22.7769f, 0.167617f, 52.8528f, 0.0f);
+    sbbox.maxPoint = glm::vec4(23.588f, 1.14384f, 101.884f, 0.0f);
+    sbbox.normal = glm::vec4(1.0f, 0.0f, 0.0f, 0.0f);
+    straightsBBoxes.push_back(sbbox);
+
+    sbbox.minPoint = glm::vec4(31.5765f, 0.167617f, 52.91f, 0.0f);
+    sbbox.maxPoint = glm::vec4(32.3877f, 1.14384f, 101.941f, 0.0f);
+    sbbox.normal = glm::vec4(-1.0f, 0.0f, 0.0f, 0.0f);
+    straightsBBoxes.push_back(sbbox);
+
+    sbbox.minPoint = glm::vec4(7.47314f, 0.167617f, 68.8696f, 0.0f);
+    sbbox.maxPoint = glm::vec4(8.28739f, 1.14384f, 101.592f, 0.0f);
+    sbbox.normal = glm::vec4(1.0f, 0.0f, 0.0f, 0.0f);
+    straightsBBoxes.push_back(sbbox);
+
+    sbbox.minPoint = glm::vec4(-1.32648f, 0.167617f, 68.8124f, 0.0f);
+    sbbox.maxPoint = glm::vec4(-0.512249f, 1.14384f, 101.535f, 0.0f);
+    sbbox.normal = glm::vec4(-1.0f, 0.0f, 0.0f, 0.0f);
+    straightsBBoxes.push_back(sbbox);
+
+    sbbox.minPoint = glm::vec4(-41.0521f, 0.167617f, 51.8798f, 0.0f);
+    sbbox.maxPoint = glm::vec4(-8.40433f, 1.14384f, 52.6341f, 0.0f);
+    sbbox.normal = glm::vec4(0.0f, 0.0f, 1.0f, 0.0f);
+    straightsBBoxes.push_back(sbbox);
+
+    sbbox.minPoint = glm::vec4(-41.1093f, 0.167617f, 60.6794f, 0.0f);
+    sbbox.maxPoint = glm::vec4(-8.46143f, 1.14384f, 61.4337f, 0.0f);
+    sbbox.normal = glm::vec4(0.0f, 0.0f, -1.0f, 0.0f);
+    straightsBBoxes.push_back(sbbox);
+
+    sbbox.minPoint = glm::vec4(-57.7365f, 0.167617f, 11.8487f, 0.0f);
+    sbbox.maxPoint = glm::vec4(-56.9515f, 1.14384f, 44.5001f, 0.0f);
+    sbbox.normal = glm::vec4(1.0f, 0.0f, 0.0f, 0.0f);
+    straightsBBoxes.push_back(sbbox);
+
+    sbbox.minPoint = glm::vec4(-48.9368f, 0.167617f, 11.9059f, 0.0f);
+    sbbox.maxPoint = glm::vec4(-48.3918f, 1.14384f, 44.5557f, 0.0f);
+    sbbox.normal = glm::vec4(-1.0f, 0.0f, 0.0f, 0.0f);
+    straightsBBoxes.push_back(sbbox);
+
+    //starting line and check bbox
+    std::vector<bbox> checkpoints;
+    bbox cbbox;
+    cbbox.minPoint = glm::vec4(23.573f, 0.167617f, 61.0342f, 0.0f);
+    cbbox.maxPoint = glm::vec4(31.8161f, 1.14384f, 69.2047f, 0.0f);
+    cbbox.normal = glm::vec4(1.0f, 0.0f, 0.0f, 0.0f);
+    checkpoints.push_back(cbbox);
+
+    cbbox.minPoint = glm::vec4(1.77523f, 0.167617f, -4.71291f, 0.0f);
+    cbbox.maxPoint = glm::vec4(2.275f, 1.14384f, 4.71291f, 0.0f);
+    cbbox.normal = glm::vec4(0.0f, 1.0f, 0.0f, 0.0f);
+    checkpoints.push_back(cbbox);
+
     while (!glfwWindowShouldClose(window))
     {
         float pad = TextRendering_LineHeight(window);
@@ -470,11 +561,14 @@ int main(int argc, char *argv[])
             if (camType == 0)
             {
 
-              if(boostTime<current_time){
-                camera_position_c = Matrix_Translate(-carForward.x * 6 / (1 + norm(current_velocity) * 0.04), 2 / (1 + norm(current_velocity) * 0.05f), -carForward.z * 6 / (1 + norm(current_velocity) * 0.04)) * carPos;
-              }else{
-                camera_position_c = Matrix_Translate(-carForward.x * 6 / (1 + norm(current_velocity) * 0.01), 2 / (1 + norm(current_velocity) * 0.02f), -carForward.z * 6 / (1 + norm(current_velocity) * 0.01)) * carPos;
-              }
+                if (boostTime < current_time)
+                {
+                    camera_position_c = Matrix_Translate(-carForward.x * 6 / (1 + norm(current_velocity) * 0.04), 2 / (1 + norm(current_velocity) * 0.05f), -carForward.z * 6 / (1 + norm(current_velocity) * 0.04)) * carPos;
+                }
+                else
+                {
+                    camera_position_c = Matrix_Translate(-carForward.x * 6 / (1 + norm(current_velocity) * 0.01), 2 / (1 + norm(current_velocity) * 0.02f), -carForward.z * 6 / (1 + norm(current_velocity) * 0.01)) * carPos;
+                }
             }
             else if (camType == 1)
             {
@@ -664,11 +758,12 @@ int main(int argc, char *argv[])
                         modelPlayer = Matrix_Translate(carPos.x, carPos.y, carPos.z) * Matrix_Rotate(PI / 20, carForward) * Matrix_Translate(-carPos.x, -carPos.y, -carPos.z) * modelPlayer;
                     }
                 }
-                if (spacePressed && (boostTime < current_time)&&boostpower>1)
+                if (spacePressed && (boostTime < current_time) && boostpower > 1)
                 {
                     boostpower -= 22;
-                    if(boostpower<=0){
-                        boostpower=1;
+                    if (boostpower <= 0)
+                    {
+                        boostpower = 1;
                     }
                     acceleration += 10.0f * max_velocity * carForward * delta_t;
                     current_velocity += 1.0f * max_velocity * carForward;
@@ -676,7 +771,7 @@ int main(int argc, char *argv[])
                 }
             }
 
-            if (norm(acceleration) == 0 && norm(current_velocity) < 0.1)
+            if (norm(acceleration) == 0 && norm(current_velocity) < 0.5)
             {
                 current_velocity *= 0;
             }
@@ -693,31 +788,71 @@ int main(int argc, char *argv[])
             bool collided2 = spheres_collision(carPos, playerHitboxRadius, opponnent2pos, opponnent2HitboxRadius);
             if (collided1)
             {
+                if(stunTime<current_time){
+                    boostpower -= 10;
+                }
                 glm::vec4 yfilter = glm::vec4(1.0f, 0.0f, 1.0f, 0.0f);
                 glm::vec4 axis = ((carPos * yfilter - opponnent1pos * yfilter)) / norm((carPos * yfilter) - (opponnent1pos * yfilter));
                 std::cout << axis.w << " " << current_velocity.w;
-                glm::vec4 newSpeed = 1.0f * (current_velocity - 2 * (dotproduct(current_velocity, axis)) * axis);
+                glm::vec4 newSpeed = (current_velocity - 2 * (dotproduct(current_velocity, axis)) * axis);
                 current_velocity = newSpeed;
                 if (norm(lateral_velocity) != 0)
                 {
                     lateral_velocity = -lateral_velocity;
                     stunTime = current_time + 0.5;
                 }
-                boostpower-=10;
             }
             if (collided2)
             {
+                if(stunTime<current_time){
+                    boostpower -= 10;
+                }
                 glm::vec4 yfilter = glm::vec4(1.0f, 0.0f, 1.0f, 0.0f);
                 glm::vec4 axis = ((carPos * yfilter - opponnent2pos * yfilter)) / norm((carPos * yfilter) - (opponnent2pos * yfilter));
                 std::cout << axis.w << " " << current_velocity.w;
-                glm::vec4 newSpeed = 1.0f * (current_velocity - 2 * (dotproduct(current_velocity, axis)) * axis);
+                glm::vec4 newSpeed = (current_velocity - 2 * (dotproduct(current_velocity, axis)) * axis);
                 current_velocity = newSpeed;
                 if (norm(lateral_velocity) != 0)
                 {
                     lateral_velocity = -lateral_velocity;
                     stunTime = current_time + 0.5;
                 }
-                boostpower-=10;
+            }
+            pBox.minPoint = (glm::vec4(carPos.x - 0.46, carPos.y - 0.46, carPos.z - 0.46, carPos.w));
+            pBox.maxPoint = glm::vec4(carPos.x + 0.46, carPos.y + 0.46, carPos.z + 0.46, carPos.w);
+            glm::vec4 normal = checkAllbbox(pBox, straightsBBoxes);
+            if (normal != nullvector)
+            {
+                if(stunTime<current_time){
+                    boostpower -= 10;
+                }
+                glm::vec4 newSpeed = (current_velocity - 2 * (dotproduct(current_velocity, normal)) * normal);
+                current_velocity = newSpeed;
+                // carPos=Matrix_Translate(normal.x,normal.y,normal.z)*carPos;
+                // modelPlayer=Matrix_Translate(normal.x,normal.y,normal.z)*modelPlayer;
+                float dotprod = dotproduct(normalize(current_velocity), carForward);
+                if (dotprod > 1)
+                {
+                    dotprod = 1;
+                }
+                if (dotprod < -1)
+                {
+                    dotprod = -1;
+                }
+                float angle = acos(dotprod);
+                glm::vec4 cross = crossproduct(current_velocity, carForward);
+                if (cross.y > 0)
+                {
+                    angle = -1 * angle;
+                }
+                carForward = Matrix_Rotate_Y(angle) * carForward;
+                modelPlayer = Matrix_Translate(carPos.x, carPos.y, carPos.z) * Matrix_Rotate_Y(angle) * Matrix_Translate(-carPos.x, -carPos.y, -carPos.z) * modelPlayer;
+                if (norm(lateral_velocity) != 0)
+                {
+                    lateral_velocity = -lateral_velocity;
+                    stunTime = current_time + 0.5;
+                }
+                
             }
             frame_movement = (current_velocity + lateral_velocity) * delta_t;
             modelPlayer = Matrix_Translate(frame_movement.x, frame_movement.y, frame_movement.z) * modelPlayer;
@@ -765,17 +900,19 @@ int main(int argc, char *argv[])
         glUniformMatrix4fv(model_uniform, 1, GL_FALSE, glm::value_ptr(model));
         glUniform1i(object_id_uniform, START);
         DrawVirtualObject("Starting_Line");
-
+        glm::vec4 normal = checkAllbbox(pBox, checkpoints);
         // win/lose logic
         if (current_time > 30 && raceStart && !finished)
         {
             lost = true;
         }
-        if (false /*colisao com checkpoint*/)
+
+        
+        if (normal.x==1 /*colisao com checkpoint*/)
         {
             checkpoint = true;
         }
-        if (false /*colisao com final*/)
+        if (normal.y==1 /*colisao com final*/)
         {
             if (checkpoint)
             {
@@ -792,15 +929,16 @@ int main(int argc, char *argv[])
             raceStart = false;
             TextRendering_PrintString(window, "You Lost, Press Enter to Restart", -1.0f + pad / 10, -1.0f + 2 * pad / 10, 1.0f);
         }
-        if (!raceStart && !finished)
+        if (!raceStart && !finished && boostpower>0)
         {
             TextRendering_PrintString(window, "Press Enter to Start", -1.0f + pad / 10, -1.0f + 2 * pad / 10, 1.0f);
         }
-        if(boostpower<=0){
-             raceStart = false;
+        if (boostpower <= 0)
+        {
+            raceStart = false;
             TextRendering_PrintString(window, "You Lost, Press Enter to Restart", -1.0f + pad / 10, -1.0f + 2 * pad / 10, 1.0f);
         }
-        printBoost(boostpower,pad,window);
+        printBoost(boostpower, pad, window);
         glfwSwapBuffers(window);
         glfwPollEvents();
     }
@@ -809,17 +947,20 @@ int main(int argc, char *argv[])
 
     return 0;
 }
-void printBoost(float power,float pad,GLFWwindow* window){
-    std::string boost="Boost Power[";
-    int convert=ceil(power/10);
-    for(int i=0;i<convert;i++){
+void printBoost(float power, float pad, GLFWwindow *window)
+{
+    std::string boost = "Boost Power[";
+    int convert = ceil(power / 10);
+    for (int i = 0; i < convert; i++)
+    {
         boost.append("*");
     }
-    for(int i=convert;i<10;i++){
+    for (int i = convert; i < 10; i++)
+    {
         boost.append("-");
     }
     boost.append("]");
-    TextRendering_PrintString(window, boost, -1.0f + pad / 20, 1.0f-2* pad, 2.0f);
+    TextRendering_PrintString(window, boost, -1.0f + pad / 20, 1.0f - 2 * pad, 2.0f);
 }
 // Função que carrega uma imagem para ser utilizada como textura
 void LoadTextureImage(const char *filename)

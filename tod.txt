@@ -1,16 +1,1 @@
-today:
-new path for opponent2
-
-
-future:
-car strafe (mouse buttons)
-collision
-win condition
-boost
-
-Requisitos
-win condition
-No mínimo sua aplicação deve utilizar três tipos de teste de intersecção (por exemplo, um teste cubo-cubo, um teste cubo-plano, e um teste ponto-esfera).
-Estes testes devem ter algum propósito dentro da lógica de sua aplicação.
-
-Os testes de colisão devem ser implementados em um arquivo à parte, nomeado "collisions.cpp".
+collision 2 remain
