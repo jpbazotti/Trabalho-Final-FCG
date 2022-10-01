@@ -31,6 +31,7 @@ glm::mat4 opponentMovement(glm::mat4 model, float bezierTime, std::vector<glm::v
     else{
         return returnModel;
     }
+ 
     glm::vec4 newPoint = BezierPoint - oldpos;
 
 

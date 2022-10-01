@@ -1,4 +1,4 @@
-glm::vec4 Bezier(std::vector<glm::vec4> controlPoints, int degree, float point)
+inline glm::vec4 Bezier(std::vector<glm::vec4> controlPoints, int degree, float point)
 {
     std::vector<glm::vec4> points = controlPoints;
     int i = degree;

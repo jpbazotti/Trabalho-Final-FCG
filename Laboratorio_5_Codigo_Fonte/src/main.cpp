@@ -100,6 +100,7 @@ float TextRendering_LineHeight(GLFWwindow *window);
 float TextRendering_CharWidth(GLFWwindow *window);
 void TextRendering_PrintString(GLFWwindow *window, const std::string &str, float x, float y, float scale = 1.0f);
 bool spheres_collision(glm::vec4 hitbox1Center, float hitbox1Radius, glm::vec4 hitbox2Center, float hitbox2Radius);
+glm::vec4 checkAllBezier(glm::vec4 hitbox1Center, float hitbox1Radius, std::vector<std::vector<glm::vec4>> bezierList, float step);
 typedef struct bbox
 {
     glm::vec4 minPoint;
@@ -144,8 +145,6 @@ std::stack<glm::mat4> g_MatrixStack;
 
 // Razão de proporção da janela (largura/altura). Veja função FramebufferSizeCallback().
 float g_ScreenRatio = 1.0f;
-
-
 
 // "g_LeftMouseButtonPressed = true" se o usuário está com o botão esquerdo do mouse
 // pressionado no momento atual. Veja função MouseButtonCallback().
@@ -448,7 +447,7 @@ int main(int argc, char *argv[])
     glm::vec4 carLeft = crossproduct(up_vector, carForward);
     glm::vec4 carRight = -carLeft;
     std::vector<bbox> straightsBBoxes;
-    //straighline bounding boxes
+    // straighline bounding boxes
     bbox sbbox;
     sbbox.minPoint = glm::vec4(-40.7087f, 0.167617f, -4.80944f, 0.0f);
     sbbox.maxPoint = glm::vec4(119.674f, 1.14384f, -4.02039f, 0.0f);
@@ -520,7 +519,7 @@ int main(int argc, char *argv[])
     sbbox.normal = glm::vec4(-1.0f, 0.0f, 0.0f, 0.0f);
     straightsBBoxes.push_back(sbbox);
 
-    //starting line and check bbox
+    // starting line and check bbox
     std::vector<bbox> checkpoints;
     bbox cbbox;
     cbbox.minPoint = glm::vec4(23.573f, 0.167617f, 61.0342f, 0.0f);
@@ -532,6 +531,122 @@ int main(int argc, char *argv[])
     cbbox.maxPoint = glm::vec4(2.275f, 1.14384f, 4.71291f, 0.0f);
     cbbox.normal = glm::vec4(0.0f, 1.0f, 0.0f, 0.0f);
     checkpoints.push_back(cbbox);
+    // curves
+    std::vector<std::vector<glm::vec4>> curveList;
+    std::vector<glm::vec4> beziercurve1;
+    beziercurve1.push_back(glm::vec4(120.512f, 0.0f, -4.36174f, 1.0f));
+    beziercurve1.push_back(glm::vec4(123.302f, 0.0f, -4.86174f, 1.0f));
+    beziercurve1.push_back(glm::vec4(135.011f, 0.0f, -1.97653f, 1.0f));
+    beziercurve1.push_back(glm::vec4(136.284f, 0.0f, 7.22413f, 1.0f));
+    curveList.push_back(beziercurve1);
+
+    std::vector<glm::vec4> beziercurve2;
+    beziercurve2.push_back(glm::vec4(119.626f, 0.0f, 4.15303f, 1.0f));
+    beziercurve2.push_back(glm::vec4(122.416f, 0.0f, 4.19443f, 1.0f));
+    beziercurve2.push_back(glm::vec4(128.515f, 0.0f, 4.42184f, 1.0f));
+    beziercurve2.push_back(glm::vec4(128.311f, 0.0f, 13.6225f, 1.0f));
+    curveList.push_back(beziercurve2);
+
+    std::vector<glm::vec4> beziercurve3;
+    beziercurve3.push_back(glm::vec4(128.478f, 0.0f, 51.9777f, 1.0f));
+    beziercurve3.push_back(glm::vec4(127.48f, 0.0f, 63.1046f, 1.0f));
+    beziercurve3.push_back(glm::vec4(114.013f, 0.0f, 63.1661f, 1.0f));
+    beziercurve3.push_back(glm::vec4(113.237f, 0.0f, 52.1931f, 1.0f));
+    curveList.push_back(beziercurve3);
+
+    std::vector<glm::vec4> beziercurve4;
+    beziercurve4.push_back(glm::vec4(113.237f, 0.0f, 52.1931f, 1.0f));
+    beziercurve4.push_back(glm::vec4(113.395f, 0.0f, 38.6298f, 1.0f));
+    beziercurve4.push_back(glm::vec4(99.3735f, 0.0f, 35.9511f, 1.0f));
+    beziercurve4.push_back(glm::vec4(96.5414f, 0.0f, 36.5426f, 1.0f));
+    curveList.push_back(beziercurve4);
+
+    std::vector<glm::vec4> beziercurve5;
+    beziercurve5.push_back(glm::vec4(137.254f, 0.0f, 52.1931f, 1.0f));
+    beziercurve5.push_back(glm::vec4(137.412f, 0.0f, 72.4043f, 1.0f));
+    beziercurve5.push_back(glm::vec4(109.267f, 0.0f, 76.808f, 1.0f));
+    beziercurve5.push_back(glm::vec4(105.092f, 0.0f, 55.4622f, 1.0f));
+    curveList.push_back(beziercurve5);
+
+    std::vector<glm::vec4> beziercurve6;
+    beziercurve6.push_back(glm::vec4(105.092f, 0.0f, 55.4622f, 1.0f));
+    beziercurve6.push_back(glm::vec4(104.126f, 0.0f, 48.4478f, 1.0f));
+    beziercurve6.push_back(glm::vec4(103.997f, 0.0f, 44.8816f, 1.0f));
+    beziercurve6.push_back(glm::vec4(94.0448f, 0.0f, 45.1446f, 1.0f));
+    curveList.push_back(beziercurve6);
+
+
+    std::vector<glm::vec4> beziercurve7;
+    beziercurve7.push_back(glm::vec4(39.7007f, 0.0f, 36.3488f, 1.0f));
+    beziercurve7.push_back(glm::vec4(26.3065f, 0.0f, 36.4643f, 1.0f));
+    beziercurve7.push_back(glm::vec4(21.8087f, 0.0f, 49.8102f, 1.0f));
+    beziercurve7.push_back(glm::vec4(23.0853f, 0.0f, 56.8246f, 1.0f));
+    curveList.push_back(beziercurve7);
+
+    std::vector<glm::vec4> beziercurve8;
+    beziercurve8.push_back(glm::vec4(39.7007f, 0.0f, 45.337f, 1.0f));
+    beziercurve8.push_back(glm::vec4(34.6639f, 0.0f, 45.4525f, 1.0f));
+    beziercurve8.push_back(glm::vec4(30.8758f, 0.0f, 49.8102f, 1.0f));
+    beziercurve8.push_back(glm::vec4(31.7581f, 0.0f, 56.8246f, 1.0f));
+    curveList.push_back(beziercurve8);
+
+    std::vector<glm::vec4> beziercurve9;
+    beziercurve9.push_back(glm::vec4(23.3203f, 0.0f, 99.3802f, 1.0f));
+    beziercurve9.push_back(glm::vec4(23.0891f, 0.0f, 114.942f, 1.0f));
+    beziercurve9.push_back(glm::vec4(6.20176f, 0.0f, 110.899f, 1.0f));
+    beziercurve9.push_back(glm::vec4(7.853f, 0.0f, 98.6958f, 1.0f));
+    curveList.push_back(beziercurve9);
+
+    std::vector<glm::vec4> beziercurve10;
+    beziercurve10.push_back(glm::vec4(31.9701f, 0.0f, 99.3802f, 1.0f));
+    beziercurve10.push_back(glm::vec4(33.9709f, 0.0f, 121.277f, 1.0f));
+    beziercurve10.push_back(glm::vec4(-1.25309f, 0.0f, 127.641f, 1.0f));
+    beziercurve10.push_back(glm::vec4(-1.16885f, 0.0f, 98.6958f, 1.0f));
+    curveList.push_back(beziercurve10);
+
+    std::vector<glm::vec4> beziercurve11;
+    beziercurve11.push_back(glm::vec4(7.47649f, 0.0f, 66.7042f, 1.0f));
+    beziercurve11.push_back(glm::vec4(6.74377f, 0.0f, 54.6708f, 1.0f));
+    beziercurve11.push_back(glm::vec4(-4.02467f, 0.0f, 51.278f, 1.0f));
+    beziercurve11.push_back(glm::vec4(-15.0344f, 0.0f, 52.0941f, 1.0f));
+    curveList.push_back(beziercurve11);
+
+    std::vector<glm::vec4> beziercurve12;
+    beziercurve12.push_back(glm::vec4(-0.967499f, 0.0f, 73.5248f, 1.0f));
+    beziercurve12.push_back(glm::vec4(-0.731407f, 0.0f, 61.4914f, 1.0f));
+    beziercurve12.push_back(glm::vec4(-4.02469f, 0.0f, 60.2515f, 1.0f));
+    beziercurve12.push_back(glm::vec4(-15.0344f, 0.0f, 61.0676f, 1.0f));
+    curveList.push_back(beziercurve12);
+
+    std::vector<glm::vec4> beziercurve13;
+    beziercurve13.push_back(glm::vec4(-42.6206f, 0.0f, 60.6673f, 1.0f));
+    beziercurve13.push_back(glm::vec4(-50.2865f, 0.0f, 59.8842f, 1.0f));
+    beziercurve13.push_back(glm::vec4(-57.062f, 0.0f, 55.8317f, 1.0f));
+    beziercurve13.push_back(glm::vec4(-57.3571f, 0.0f, 43.3885f, 1.0f));
+    curveList.push_back(beziercurve13);
+
+    std::vector<glm::vec4> beziercurve14;
+    beziercurve14.push_back(glm::vec4(-38.0477f, 0.0f, 52.1415f, 1.0f));
+    beziercurve14.push_back(glm::vec4(-45.7135f, 0.0f, 52.9085f, 1.0f));
+    beziercurve14.push_back(glm::vec4(-48.4587f, 0.0f, 49.5536f, 1.0f));
+    beziercurve14.push_back(glm::vec4(-48.7538f, 0.0f, 43.3885f, 1.0f));
+    curveList.push_back(beziercurve14);
+
+    std::vector<glm::vec4> beziercurve15;
+    beziercurve15.push_back(glm::vec4(-48.502f, 0.0f, 12.3608f, 1.0f));
+    beziercurve15.push_back(glm::vec4(-48.2069f, 0.0f, 8.3172f, 1.0f));
+    beziercurve15.push_back(glm::vec4(-46.0213f, 0.0f, 4.44382f, 1.0f));
+    beziercurve15.push_back(glm::vec4(-38.0477f, 0.0f, 4.84188f, 1.0f));
+    curveList.push_back(beziercurve15);
+
+    std::vector<glm::vec4> beziercurve16;
+    beziercurve16.push_back(glm::vec4(-57.227f, 0.0f, 12.3608f, 1.0f));
+    beziercurve16.push_back(glm::vec4(-56.9319f, 0.0f, 8.3172f, 1.0f));
+    beziercurve16.push_back(glm::vec4(-54.5646f, 0.0f, -4.60828f, 1.0f));
+    beziercurve16.push_back(glm::vec4(-38.0477f, 0.0f, -4.21022f, 1.0f));
+    curveList.push_back(beziercurve16);
+
+  
 
     while (!glfwWindowShouldClose(window))
     {
@@ -561,11 +676,14 @@ int main(int argc, char *argv[])
             if (camType == 0)
             {
 
-              if(boostTime<current_time){
-                camera_position_c = Matrix_Translate(-carForward.x * 6 / (1 + norm(current_velocity) * norm(current_velocity) * 0.0004), 2 / (1 + norm(current_velocity) * 0.05f), -carForward.z * 6 / (1 + norm(current_velocity) * norm(current_velocity) * 0.0004)) * carPos;
-              }else{
-                camera_position_c = Matrix_Translate(-carForward.x * 6 / (1 + norm(current_velocity) * norm(current_velocity) * 0.0001), 2 / (1 + norm(current_velocity) * 0.02f), -carForward.z * 6 / (1 + norm(current_velocity) * norm(current_velocity) * 0.0001)) * carPos;
-              }
+                if (boostTime < current_time)
+                {
+                    camera_position_c = Matrix_Translate(-carForward.x * 6 / (1 + norm(current_velocity) * norm(current_velocity) * 0.0004), 2 / (1 + norm(current_velocity) * 0.05f), -carForward.z * 6 / (1 + norm(current_velocity) * norm(current_velocity) * 0.0004)) * carPos;
+                }
+                else
+                {
+                    camera_position_c = Matrix_Translate(-carForward.x * 6 / (1 + norm(current_velocity) * norm(current_velocity) * 0.0001), 2 / (1 + norm(current_velocity) * 0.02f), -carForward.z * 6 / (1 + norm(current_velocity) * norm(current_velocity) * 0.0001)) * carPos;
+                }
             }
             else if (camType == 1)
             {
@@ -660,14 +778,14 @@ int main(int argc, char *argv[])
             modelPlayer = Matrix_Rotate_Y(3.141592 / 2) * modelPlayer;
             modelOponnent1 = Matrix_Identity();
             modelOponnent1 = Matrix_Scale(0.0012, 0.0012, 0.0012) * modelOponnent1;
-            modelOponnent1 = Matrix_Rotate_Y(3.141592 / 2) * modelOponnent1;
+            modelOponnent1 = Matrix_Rotate_Y(PI / 2) * modelOponnent1;
             modelOponnent1 = Matrix_Translate(oldPos1.x, oldPos1.y, oldPos1.z) * modelOponnent1;
             opponnent1forward = glm::vec4(1.0f, 0.0f, 0.0f, 0.0f);
             opponnent1pos = glm::vec4(oldPos1.x, oldPos1.y, oldPos1.z, 1.0f);
 
             modelOponnent2 = Matrix_Identity();
             modelOponnent2 = Matrix_Scale(0.0012, 0.0012, 0.0012) * modelOponnent2;
-            modelOponnent2 = Matrix_Rotate_Y(3.141592 / 2) * modelOponnent2;
+            modelOponnent2 = Matrix_Rotate_Y(PI / 2) * modelOponnent2;
             modelOponnent2 = Matrix_Translate(oldPos2.x, oldPos2.y, oldPos2.z) * modelOponnent2;
             opponnent2forward = glm::vec4(1.0f, 0.0f, 0.0f, 0.0f);
             opponnent2pos = glm::vec4(oldPos2.x, oldPos2.y, oldPos2.z, 1.0f);
@@ -785,42 +903,43 @@ int main(int argc, char *argv[])
             bool collided2 = spheres_collision(carPos, playerHitboxRadius, opponnent2pos, opponnent2HitboxRadius);
             if (collided1)
             {
-                if(stunTime<current_time){
+                if (stunTime < current_time)
+                {
                     boostpower -= 10;
                 }
                 glm::vec4 yfilter = glm::vec4(1.0f, 0.0f, 1.0f, 0.0f);
                 glm::vec4 axis = ((carPos * yfilter - opponnent1pos * yfilter)) / norm((carPos * yfilter) - (opponnent1pos * yfilter));
-                std::cout << axis.w << " " << current_velocity.w;
                 glm::vec4 newSpeed = (current_velocity - 2 * (dotproduct(current_velocity, axis)) * axis);
                 current_velocity = newSpeed;
                 if (norm(lateral_velocity) != 0)
                 {
                     lateral_velocity = -lateral_velocity;
-                    stunTime = current_time + 0.5;
                 }
+                stunTime = current_time + 0.5;
             }
             if (collided2)
             {
-                if(stunTime<current_time){
+                if (stunTime < current_time)
+                {
                     boostpower -= 10;
                 }
                 glm::vec4 yfilter = glm::vec4(1.0f, 0.0f, 1.0f, 0.0f);
                 glm::vec4 axis = ((carPos * yfilter - opponnent2pos * yfilter)) / norm((carPos * yfilter) - (opponnent2pos * yfilter));
-                std::cout << axis.w << " " << current_velocity.w;
                 glm::vec4 newSpeed = (current_velocity - 2 * (dotproduct(current_velocity, axis)) * axis);
                 current_velocity = newSpeed;
                 if (norm(lateral_velocity) != 0)
                 {
                     lateral_velocity = -lateral_velocity;
-                    stunTime = current_time + 0.5;
                 }
+                stunTime = current_time + 0.5;
             }
             pBox.minPoint = (glm::vec4(carPos.x - 0.46, carPos.y - 0.46, carPos.z - 0.46, carPos.w));
             pBox.maxPoint = glm::vec4(carPos.x + 0.46, carPos.y + 0.46, carPos.z + 0.46, carPos.w);
             glm::vec4 normal = checkAllbbox(pBox, straightsBBoxes);
             if (normal != nullvector)
             {
-                if(stunTime<current_time){
+                if (stunTime < current_time)
+                {
                     boostpower -= 10;
                 }
                 glm::vec4 newSpeed = (current_velocity - 2 * (dotproduct(current_velocity, normal)) * normal);
@@ -847,10 +966,53 @@ int main(int argc, char *argv[])
                 if (norm(lateral_velocity) != 0)
                 {
                     lateral_velocity = -lateral_velocity;
-                    stunTime = current_time + 0.5;
                 }
-                
+                stunTime = current_time + 0.5;
             }
+
+            glm::vec4 coll = checkAllBezier(carPos, playerHitboxRadius, curveList, 0.01f);
+            if (coll != nullvector)
+            {
+                if (stunTime < current_time)
+                {
+                    boostpower -= 10;
+
+                    float dotprod = dotproduct(normalize(carPos - coll), carForward);
+                    if (dotprod > 1)
+                    {
+                        dotprod = 1;
+                    }
+                    if (dotprod < -1)
+                    {
+                        dotprod = -1;
+                    }
+                    float angle = acos(dotprod);
+                    glm::vec4 cross = crossproduct(normalize(carPos - coll), carForward);
+                    if (cross.y < 0)
+                    {
+                        angle = -1 * angle;
+                    }
+                    if (angle > 0)
+                    {
+                        carForward = Matrix_Rotate_Y(-PI / 2) * carForward;
+                        modelPlayer = Matrix_Translate(carPos.x, carPos.y, carPos.z) * Matrix_Rotate_Y(-PI / 2) * Matrix_Translate(-carPos.x, -carPos.y, -carPos.z) * modelPlayer;
+                    }
+                    else if (angle < 0)
+                    {
+
+                        carForward = Matrix_Rotate_Y(PI / 2) * carForward;
+                        modelPlayer = Matrix_Translate(carPos.x, carPos.y, carPos.z) * Matrix_Rotate_Y(PI / 2) * Matrix_Translate(-carPos.x, -carPos.y, -carPos.z) * modelPlayer;
+                    }
+                    current_velocity = norm(current_velocity)*0.5f * carForward;
+
+                    if (norm(lateral_velocity) != 0)
+                    {
+                        lateral_velocity = -lateral_velocity;
+                    }
+                    stunTime = current_time + 0.1;
+                }
+            }
+
             frame_movement = (current_velocity + lateral_velocity) * delta_t;
             modelPlayer = Matrix_Translate(frame_movement.x, frame_movement.y, frame_movement.z) * modelPlayer;
             carPos += frame_movement;
@@ -868,10 +1030,7 @@ int main(int argc, char *argv[])
             modelOponnent2 = opponentMovement(modelOponnent2, bezierTime2, controlPoints2_1, controlPoints2_2, controlPoints2_3, controlPoints2_4, controlPoints2_5, controlPoints2_6, 3, opponnent2forward, opponnent2pos, oldPos2);
         }
 
-        modelSkybox = Matrix_Translate(carPos.x, carPos.y, carPos.z) * Matrix_Scale(0.8f, 0.8f, 0.8f) * Matrix_Identity();
-        glUniformMatrix4fv(model_uniform, 1, GL_FALSE, glm::value_ptr(modelSkybox));
-        glUniform1i(object_id_uniform, SPHERE);
-        DrawVirtualObject("sphere");
+
 
         glUniformMatrix4fv(model_uniform, 1, GL_FALSE, glm::value_ptr(modelPlayer));
         glUniform1i(object_id_uniform, BLUE_FALCON);
@@ -899,17 +1058,20 @@ int main(int argc, char *argv[])
         DrawVirtualObject("Starting_Line");
         glm::vec4 normal = checkAllbbox(pBox, checkpoints);
         // win/lose logic
+        if (current_time < 30 && raceStart && !finished)
+        {
+            lost = false;
+        }
         if (current_time > 30 && raceStart && !finished)
         {
             lost = true;
         }
 
-        
-        if (normal.x==1 /*colisao com checkpoint*/)
+        if (normal.x == 1 /*colisao com checkpoint*/)
         {
             checkpoint = true;
         }
-        if (normal.y==1 /*colisao com final*/)
+        if (normal.y == 1 /*colisao com final*/)
         {
             if (checkpoint)
             {
@@ -926,7 +1088,7 @@ int main(int argc, char *argv[])
             raceStart = false;
             TextRendering_PrintString(window, "You Lost, Press Enter to Restart", -1.0f + pad / 10, -1.0f + 2 * pad / 10, 1.0f);
         }
-        if (!raceStart && !finished && boostpower>0)
+        if (!raceStart && !finished && boostpower > 0)
         {
             TextRendering_PrintString(window, "Press Enter to Start", -1.0f + pad / 10, -1.0f + 2 * pad / 10, 1.0f);
         }
